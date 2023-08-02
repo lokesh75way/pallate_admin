@@ -49,9 +49,9 @@ const UserList: React.FC = () => {
   }, []);
 
   const columns: GridColDef[] = [
-    { field: "_id", headerName: "ID", width: 350 },
-    { field: "name", headerName: "Name", width: 350, sortable: true },
-    { field: "email", headerName: "Email", width: 350, sortable: true },
+    { field: "_id", headerName: "ID", width: 250 },
+    { field: "name", headerName: "Name", width: 250, sortable: true },
+    { field: "email", headerName: "Email", width: 250, sortable: true },
   ];
 
   const handleRowClick = (params: any) => {

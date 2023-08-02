@@ -96,7 +96,9 @@ const IngredientShowPage: React.FC = () => {
     navigate("/ingredients/create");
   };
   const handleEditButton = () => {
-    navigate("/ingredients/editForm");
+
+    navigate(`/ingredients/${id}/editForm`);
+
   };
 
   if (!ingredient) {

@@ -1,13 +1,17 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback,useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import { useForm, Controller } from "react-hook-form";
+import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
+import Snackbar from "@mui/material/Snackbar";
+import { useTheme } from "@mui/material/styles";
 import axios from 'axios'
 import AsyncSelect from "react-select/async";
 import SaveIcon from "@mui/icons-material/Save";
 import AddIcon from "@mui/icons-material/Add";
+import { useDropzone } from "react-dropzone";
 import { makeStyles } from "@mui/styles";
 import { userOptions } from "./data";
 import {
@@ -42,9 +46,9 @@ const useStyles = makeStyles((theme) => ({
     margin: "10px",
     display: "flex",
   },
-  button: {
+  button:{
     margin: "5px",
-    border: "2px solid blue",
+    border: "2px solid #002D62",
     color: "black",
     "&:hover": {
       backgroundColor: "white",
@@ -68,6 +72,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   boxItem: {
+
     display: "flex",
     justifyContent: "space-between",
     width: "50%",
@@ -90,16 +95,16 @@ interface Ingredient {
   quantity: number;
   expiry: string;
   type: string;
-  picture: File | null;
+  image: File | null | string;
 }
 
 interface FormValues {
-  userId: string;
+  // userId: string;
   name: string;
   quantity: number;
   expiry: string;
   type: string;
-  picture: File | null;
+  image: File | null | string;
 }
 
 interface IngredientsEditFormProps {
@@ -118,26 +123,31 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
   const { ingredientId } = useParams<{ ingredientId: string }>();
   const [ingredientData, setIngredientData] = useState<Ingredient | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const navigate = useNavigate();
   const classes = useStyles();
+  const theme = useTheme();
 
   const {
     handleSubmit,
     control,
     reset,
-    
+    setValue,
     formState: { errors },
   } = useForm<FormValues>();
 
   useEffect(() => {
     const fetchIngredientData = async () => {
       try {
+      
         const response = await axios.get(
           `http://localhost:5000/api/ingredients/${ingredientId}`,
           {
             headers: {
               Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YzFlYjMyNTg0Mjk4YjUxNjI1YWNkZiIsIm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AcGFsbGF0ZS5jb20iLCJhY3RpdmUiOnRydWUsInBhc3N3b3JkIjoiJDJiJDEyJE9sbHBmSmR3akNHV2F3cnNJeHgwSnVqVUxOZ2NsTXpSejUwVjZwN2V3elFJMERiRTR2LjdtIiwicm9sZSI6IkFETUlOIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yMFQxMjoyMjozOC42NThaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yMVQwOToyNToyNS4yOTdaIiwiX192IjowfSwiaWF0IjoxNjkwODA2OTk0fQ.7vspbw1A1N019ewYYojPHS8AyMlHzlxk134f_c5GlUI",
               "ngrok-skip-browser-warning": true,
+              
             },
           }
         );
@@ -161,19 +171,29 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
         quantity: ingredientData.quantity,
         expiry: ingredientData.expiry.split("T")[0],
         type: ingredientData.type,
-        // picture: ingredientData.picture,
+        image: ingredientData.image,
       });
+
     }
   }, [ingredientData]);
 
   const onSubmit = async (data: FormValues) => {
     try {
+      const formData = new FormData();
+
+      formData.append("name", data.name);
+      formData.append("quantity", data.quantity.toString());
+      formData.append("expiry", data.expiry);
+      formData.append("type", data.type);
+      formData.append("image", data.image as File);
       const response = await axios.put(
         `https://38ef-150-129-102-218.ngrok-free.app/api/ingredients/${ingredientId}`,
-        data,
+        formData,
         {
           headers: {
             Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YzFlYjMyNTg0Mjk4YjUxNjI1YWNkZiIsIm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AcGFsbGF0ZS5jb20iLCJhY3RpdmUiOnRydWUsInBhc3N3b3JkIjoiJDJiJDEyJE9sbHBmSmR3akNHV2F3cnNJeHgwSnVqVUxOZ2NsTXpSejUwVjZwN2V3elFJMERiRTR2LjdtIiwicm9sZSI6IkFETUlOIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yMFQxMjoyMjozOC42NThaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yMVQwOToyNToyNS4yOTdaIiwiX192IjowfSwiaWF0IjoxNjkwODA2OTk0fQ.7vspbw1A1N019ewYYojPHS8AyMlHzlxk134f_c5GlUI",
+            "Content-Type": "multipart/form-data",
+            
           },
         }
       );
@@ -199,7 +219,27 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
       callback(filterColors(inputValue));
     }, 1000);
   };
+  const handleDragEnter = useCallback(() => {
+    setIsDragging(true);
+  }, []);
 
+  const handleDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (acceptedFiles && acceptedFiles.length > 0) {
+        const selectedFile = acceptedFiles[0];
+        console.log("Selected picture:", selectedFile);
+        setValue("image", selectedFile);
+
+        setIsSnackbarOpen(true);
+      }
+    },
+    [setValue]
+  );
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: handleDrop,
+    onDragEnter: handleDragEnter,
+    onDragLeave: () => setIsDragging(false),
+  });
   return (
     <div>
       <div className={classes.container}>
@@ -284,19 +324,50 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
             />
           )}
         />
+          <Controller
+          name="image"
+          control={control}
+          
+          rules={{ required: "Picture is required" }}
+          render={() => (
+            <section>
+              <div
+                {...getRootProps()}
+                style={{
+                  border: isDragging
+                    ? "2px dashed #002D62"
+                    : "2px solid transparent",
+                  padding: "10px",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <input {...getInputProps()} />
+                <Button
+                  startIcon={<AddAPhotoIcon />}
+                  className={classes.button}
+                >
+                  Upload or Drag Pictures
+                </Button>
+              </div>
+            </section>
+          )}
+        />
 
-      <Box mt={2} className={classes.boxItem}>
+      <Box className={classes.boxItem}>
         <Button
-          color="primary"
+
           onClick={handleSubmit(onSubmit)}
           startIcon={<SaveIcon />}
           className={classes.button2}
-          variant="contained"
+
         >
           Save
         </Button>
         <Button
-          color="primary"
+
           onClick={handleSubmit(onSubmit)}
           startIcon={<AddIcon />}
           className={classes.button1}

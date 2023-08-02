@@ -176,7 +176,7 @@ const IngredientsList: React.FC = () => {
         style={{
           marginLeft: "230px",
           marginTop: "0px",
-          height: "500px",
+          height: "470px",
           width: "82%",
           boxShadow: "0px 2px 4px rgba(4, 4, 1, 0.4)",
           borderRadius: "8px",

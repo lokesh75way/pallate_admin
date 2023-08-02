@@ -9,6 +9,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import axios from "axios";
+import { useTheme } from "@mui/material/styles";
+
 import { userOptions } from "./data";
 import { useDropzone } from "react-dropzone";
 import { makeStyles } from "@mui/styles";
@@ -47,7 +49,7 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     margin: "5px",
-    border: "2px solid blue",
+    border: "2px solid #002D62",
     color: "black",
   },
   button1: {
@@ -102,6 +104,7 @@ const IngredientsCreateForm: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const {
     handleSubmit,
@@ -132,6 +135,7 @@ const IngredientsCreateForm: React.FC = () => {
       await axios.post("https://38ef-150-129-102-218.ngrok-free.app/api/ingredients", formData, config);
 
       setIsSnackbarOpen(true);
+      console.log(formData)
       navigate("/ingredients");
 
       reset({
@@ -290,9 +294,9 @@ const IngredientsCreateForm: React.FC = () => {
                 {...getRootProps()}
                 style={{
                   border: isDragging
-                    ? "2px dashed blue"
+                    ? "2px dashed #002D62"
                     : "2px solid transparent",
-                  padding: "10px",
+                  padding: "7px",
                   borderRadius: "4px",
                   display: "flex",
                   alignItems: "center",
