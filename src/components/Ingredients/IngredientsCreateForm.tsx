@@ -94,7 +94,7 @@ interface FormValues {
   quantity: number;
   expiry: string;
   type: string;
-  image: File | string | null;
+  image: File;
 }
 
 const IngredientsCreateForm: React.FC = () => {
@@ -113,18 +113,23 @@ const IngredientsCreateForm: React.FC = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      data.quantity = parseFloat(data.quantity.toString());
-      data.image = "https://exmple.com/image";
-      console.log("Form values:", data);
+      const formData = new FormData();
+
+      formData.append("name", data.name);
+      formData.append("quantity", data.quantity.toString());
+      formData.append("expiry", data.expiry);
+      formData.append("type", data.type);
+      formData.append("image", data.image as File);
 
       const config = {
         headers: {
           Authorization:
             "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YmZkZDg0Y2E0YzM1NTFjOTU2ZTEzZSIsIm5hbWUiOiJzaGEiLCJlbWFpbCI6InNoYW1pbGtvdHRhOTlAZ21haWwuY29tIiwiYWN0aXZlIjp0cnVlLCJwYXNzd29yZCI6IiQyYiQxMiRXTmtLdll3eGxKdkNHRC5lSi5WNFBlY0FqeWR4SVphZmV1VWtNLjlURmNud3RCcXZrckRSNiIsInJvbGUiOiJVU0VSIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yNVQxNDozNDo0NC4yMjFaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yNVQxNDozNDo0NC4yMjFaIiwiX192IjowfSwiaWF0IjoxNjkwMjk2MzU3fQ.xZn1KSQ6prK6v39xs5iVFgDUAKC1ipHmCmZ6b7K-b6o",
+            "Content-Type": "multipart/form-data",
         },
       };
 
-      await axios.post("http://localhost:5000/api/ingredients", data, config);
+      await axios.post("https://38ef-150-129-102-218.ngrok-free.app/api/ingredients", formData, config);
 
       setIsSnackbarOpen(true);
       navigate("/ingredients");
@@ -277,7 +282,7 @@ const IngredientsCreateForm: React.FC = () => {
         <Controller
           name="image"
           control={control}
-          defaultValue={null}
+          
           rules={{ required: "Picture is required" }}
           render={() => (
             <section>
