@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useForm } from "react-hook-form";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+
 import axios from "axios";
 import {
   Dialog,
@@ -63,6 +66,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Key to store login status in localStorage
   const LOGIN_STATUS_KEY = "isLoggedIn";
@@ -85,7 +89,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/login",
+        "http://localhost:4000/api/users/login",
         {
           email: data.username,
           password: data.password,
@@ -117,6 +121,9 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   if (isLoggedIn) {
     return null;
   }
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prevShowPassword) => !prevShowPassword);
+  };
 
   return (
     <>
@@ -160,7 +167,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   label="Password"
                   {...register("password", {
                     required: "Password is required",
@@ -169,8 +176,24 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                   helperText={
                     errors.password ? (errors.password.message as string) : ""
                   }
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton
+                        onClick={handleTogglePasswordVisibility}
+                        edge="end"
+                        aria-label="toggle password visibility"
+                      >
+                        {showPassword ? (
+                          <VisibilityIcon />
+                        ) : (
+                          <VisibilityOffIcon />
+                        )}
+                      </IconButton>
+                    ),
+                  }}
                 />
               </Grid>
+
               <Grid item xs={12}>
                 <StyledButton
                   fullWidth

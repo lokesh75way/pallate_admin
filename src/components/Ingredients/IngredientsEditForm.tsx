@@ -1,5 +1,4 @@
-
-import React, { useCallback,useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { styled } from "@mui/material/styles";
@@ -7,13 +6,15 @@ import { useForm, Controller } from "react-hook-form";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import Snackbar from "@mui/material/Snackbar";
 import { useTheme } from "@mui/material/styles";
-import axios from 'axios'
+import axios from "axios";
 import AsyncSelect from "react-select/async";
 import SaveIcon from "@mui/icons-material/Save";
 import AddIcon from "@mui/icons-material/Add";
 import { useDropzone } from "react-dropzone";
 import { makeStyles } from "@mui/styles";
 import { userOptions } from "./data";
+import { useUpdateIngredientMutation } from "../../services/userApi";
+import { usersApi } from "../../services/userApi";
 import {
   Button,
   Box,
@@ -46,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
     margin: "10px",
     display: "flex",
   },
-  button:{
+  button: {
     margin: "5px",
     border: "2px solid #002D62",
     color: "black",
@@ -72,7 +73,6 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   boxItem: {
-
     display: "flex",
     justifyContent: "space-between",
     width: "50%",
@@ -82,14 +82,13 @@ const useStyles = makeStyles((theme) => ({
   },
   inputLabel: {
     position: "absolute",
-    backgroundColor:'white',
+    backgroundColor: "white",
     zIndex: 1,
-    
   },
 }));
 
 interface Ingredient {
-  id: number;
+  id: string;
   userId: string;
   name: string;
   quantity: number;
@@ -113,15 +112,13 @@ interface IngredientsEditFormProps {
 
 const StyledAsyncSelect = styled(AsyncSelect)({
   width: "50%",
-  
 });
 
 const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
   onSave,
 }) => {
- 
   const { ingredientId } = useParams<{ ingredientId: string }>();
-  const [ingredientData, setIngredientData] = useState<Ingredient | null>(null);
+  // const [ingredientData, setIngredientData] = useState<Ingredient | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDragging, setIsDragging] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
@@ -137,69 +134,38 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
     formState: { errors },
   } = useForm<FormValues>();
 
-  useEffect(() => {
-    const fetchIngredientData = async () => {
-      try {
-      
-        const response = await axios.get(
-          `http://localhost:5000/api/ingredients/${ingredientId}`,
-          {
-            headers: {
-              Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YzFlYjMyNTg0Mjk4YjUxNjI1YWNkZiIsIm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AcGFsbGF0ZS5jb20iLCJhY3RpdmUiOnRydWUsInBhc3N3b3JkIjoiJDJiJDEyJE9sbHBmSmR3akNHV2F3cnNJeHgwSnVqVUxOZ2NsTXpSejUwVjZwN2V3elFJMERiRTR2LjdtIiwicm9sZSI6IkFETUlOIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yMFQxMjoyMjozOC42NThaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yMVQwOToyNToyNS4yOTdaIiwiX192IjowfSwiaWF0IjoxNjkwODA2OTk0fQ.7vspbw1A1N019ewYYojPHS8AyMlHzlxk134f_c5GlUI",
-              "ngrok-skip-browser-warning": true,
-              
-            },
-          }
-        );
-        const data = response.data.data.ingredient; 
-        setIngredientData(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching ingredient data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchIngredientData();
-  }, [ingredientId]);
+  const { data: ingredientData } =
+    usersApi.endpoints.getIngredientById.useQuery(ingredientId);
+  console.log("data is", ingredientData);
 
   useEffect(() => {
     if (ingredientData) {
       reset({
-        // userId: ingredientData.userId,
-        name: ingredientData.name,
-        quantity: ingredientData.quantity,
-        expiry: ingredientData.expiry.split("T")[0],
-        type: ingredientData.type,
-        image: ingredientData.image,
-      });
 
+        name: ingredientData.data.ingredient.name,
+        quantity: ingredientData.data.ingredient.quantity,
+        expiry: ingredientData.data.ingredient.expiry.split("T")[0],
+        type: ingredientData.data.ingredient.type,
+        image: ingredientData.data.ingredient.image,
+      });
     }
   }, [ingredientData]);
+  const [updateIngredient, { isLoading: isUpdating }] =
+    useUpdateIngredientMutation();
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const formData = new FormData();
-
-      formData.append("name", data.name);
-      formData.append("quantity", data.quantity.toString());
-      formData.append("expiry", data.expiry);
-      formData.append("type", data.type);
-      formData.append("image", data.image as File);
-      const response = await axios.put(
-        `https://38ef-150-129-102-218.ngrok-free.app/api/ingredients/${ingredientId}`,
-        formData,
-        {
-          headers: {
-            Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YzFlYjMyNTg0Mjk4YjUxNjI1YWNkZiIsIm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AcGFsbGF0ZS5jb20iLCJhY3RpdmUiOnRydWUsInBhc3N3b3JkIjoiJDJiJDEyJE9sbHBmSmR3akNHV2F3cnNJeHgwSnVqVUxOZ2NsTXpSejUwVjZwN2V3elFJMERiRTR2LjdtIiwicm9sZSI6IkFETUlOIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yMFQxMjoyMjozOC42NThaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yMVQwOToyNToyNS4yOTdaIiwiX192IjowfSwiaWF0IjoxNjkwODA2OTk0fQ.7vspbw1A1N019ewYYojPHS8AyMlHzlxk134f_c5GlUI",
-            "Content-Type": "multipart/form-data",
-            
-          },
-        }
-      );
-      console.log("Updated ingredient:", response.data);
+      const updatedIngredient: Partial<Ingredient> = {
+        id: ingredientId,
+        name: data.name,
+        quantity: data.quantity,
+        expiry: data.expiry,
+        type: data.type,
+        image: data.image,
+      };
+      const response = await updateIngredient(updatedIngredient);
       onSave(data);
-      navigate('/ingredients');
+      navigate("/ingredients");
     } catch (error) {
       console.error("Error updating ingredient:", error);
     }
@@ -243,14 +209,14 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
   return (
     <div>
       <div className={classes.container}>
-            <StyledAsyncSelect
-              cacheOptions
-              defaultOptions
-              loadOptions={loadOptions}
-              placeholder="UserID"
-              className={classes.users}
-            />
-            
+        <StyledAsyncSelect
+          cacheOptions
+          defaultOptions
+          loadOptions={loadOptions}
+          placeholder="UserID"
+          className={classes.users}
+        />
+
         <Controller
           name="name"
           control={control}
@@ -290,19 +256,18 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
           render={({ field }) => (
             <FormControl error={!!errors.type}>
               <InputLabel
-        htmlFor="type"
-        className={`${classes.inputLabel} 
+                htmlFor="type"
+                className={`${classes.inputLabel} 
         }`}
-      >
-        Unit
-        </InputLabel>
+              >
+                Unit
+              </InputLabel>
               <Select {...field}>
                 <MenuItem value="KG">KG</MenuItem>
                 <MenuItem value="G">GM</MenuItem>
                 <MenuItem value="L">LT</MenuItem>
                 <MenuItem value="ML">ML</MenuItem>
                 <MenuItem value="COUNT">COUNT</MenuItem>
-
               </Select>
               <FormHelperText>{errors.type?.message}</FormHelperText>
             </FormControl>
@@ -324,10 +289,9 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
             />
           )}
         />
-          <Controller
+        <Controller
           name="image"
           control={control}
-          
           rules={{ required: "Picture is required" }}
           render={() => (
             <section>
@@ -356,25 +320,23 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
           )}
         />
 
-      <Box className={classes.boxItem}>
-        <Button
-
-          onClick={handleSubmit(onSubmit)}
-          startIcon={<SaveIcon />}
-          className={classes.button2}
-
-        >
-          Save
-        </Button>
-        <Button
-
-          onClick={handleSubmit(onSubmit)}
-          startIcon={<AddIcon />}
-          className={classes.button1}
-        >
-          Add More
-        </Button>
-      </Box>
+        <Box className={classes.boxItem}>
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            startIcon={<SaveIcon />}
+            className={classes.button2}
+            variant="contained"
+          >
+            Save
+          </Button>
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            startIcon={<AddIcon />}
+            className={classes.button1}
+          >
+            Add More
+          </Button>
+        </Box>
       </div>
     </div>
   );

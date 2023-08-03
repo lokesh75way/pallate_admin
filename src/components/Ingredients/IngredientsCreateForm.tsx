@@ -10,6 +10,7 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import axios from "axios";
 import { useTheme } from "@mui/material/styles";
+import { useCreateIngredientMutation } from "../../services/userApi";
 
 import { userOptions } from "./data";
 import { useDropzone } from "react-dropzone";
@@ -114,6 +115,9 @@ const IngredientsCreateForm: React.FC = () => {
     setValue,
   } = useForm<FormValues>();
 
+   const [createIngredient] = useCreateIngredientMutation(); // Using the generated mutation hook
+
+
   const onSubmit = async (data: FormValues) => {
     try {
       const formData = new FormData();
@@ -124,16 +128,7 @@ const IngredientsCreateForm: React.FC = () => {
       formData.append("type", data.type);
       formData.append("image", data.image as File);
 
-      const config = {
-        headers: {
-          Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YmZkZDg0Y2E0YzM1NTFjOTU2ZTEzZSIsIm5hbWUiOiJzaGEiLCJlbWFpbCI6InNoYW1pbGtvdHRhOTlAZ21haWwuY29tIiwiYWN0aXZlIjp0cnVlLCJwYXNzd29yZCI6IiQyYiQxMiRXTmtLdll3eGxKdkNHRC5lSi5WNFBlY0FqeWR4SVphZmV1VWtNLjlURmNud3RCcXZrckRSNiIsInJvbGUiOiJVU0VSIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yNVQxNDozNDo0NC4yMjFaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yNVQxNDozNDo0NC4yMjFaIiwiX192IjowfSwiaWF0IjoxNjkwMjk2MzU3fQ.xZn1KSQ6prK6v39xs5iVFgDUAKC1ipHmCmZ6b7K-b6o",
-            "Content-Type": "multipart/form-data",
-        },
-      };
-
-      await axios.post("https://38ef-150-129-102-218.ngrok-free.app/api/ingredients", formData, config);
-
+      await createIngredient(formData);
       setIsSnackbarOpen(true);
       console.log(formData)
       navigate("/ingredients");

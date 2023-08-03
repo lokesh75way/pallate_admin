@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import axios from "axios";
+import { useGetIngredientByIdQuery } from "../../services/userApi";
 
 const Container = styled(Box)({
   display: "flex",
@@ -67,31 +68,11 @@ const StyledButton = styled(Button)({
 
 const IngredientShowPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+
   const navigate = useNavigate();
-  const [ingredient, setIngredient] = useState<any | null>(null);
-
-  useEffect(() => {
-    const fetchIngredient = async () => {
-      try {
-        const response = await axios.get(
-          `https://38ef-150-129-102-218.ngrok-free.app/api/ingredients/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YzFlYjMyNTg0Mjk4YjUxNjI1YWNkZiIsIm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AcGFsbGF0ZS5jb20iLCJhY3RpdmUiOnRydWUsInBhc3N3b3JkIjoiJDJiJDEyJE9sbHBmSmR3akNHV2F3cnNJeHgwSnVqVUxOZ2NsTXpSejUwVjZwN2V3elFJMERiRTR2LjdtIiwicm9sZSI6IkFETUlOIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yMFQxMjoyMjozOC42NThaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yMVQwOToyNToyNS4yOTdaIiwiX192IjowfSwiaWF0IjoxNjkwODA2OTk0fQ.7vspbw1A1N019ewYYojPHS8AyMlHzlxk134f_c5GlUI`,
-              "ngrok-skip-browser-warning": true,
-            },
-          }
-        );
-
-        const data = response.data.data.ingredient;
-        setIngredient(data);
-      } catch (error) {
-        console.error("Error fetching ingredient:", error);
-      }
-    };
-    fetchIngredient();
-  }, [id]);
-
+  const { data: ingredient } = useGetIngredientByIdQuery(id);
+  console.log(ingredient)
+  
   const handleAddButton = () => {
     navigate("/ingredients/create");
   };
@@ -116,13 +97,15 @@ const IngredientShowPage: React.FC = () => {
         </StyledButton>
       </AddBox>
       <Container>
-        <Title variant="h2">{ingredient.name}</Title>
+        <Title variant="h2">{ingredient.data.ingredient.name}</Title>
         <Quantity>
-          Quantity: {ingredient.quantity} {ingredient.unit}
+          Quantity: {ingredient.data.ingredient.quantity} {ingredient.unit}
         </Quantity>
-        <Date>Expiry: {ingredient.expiry.split("T")[0]}</Date>
+        {/* <Date>Expiry: {ingredient.expiry.split("T")[0]}</Date> */}
+        <Date>Expiry: {ingredient.data.ingredient.expiry.split("T")[0]}</Date>
 
-        <Image src={ingredient.image} alt={ingredient.name} />
+
+        <Image src={ingredient.data.ingredient.image} alt={ingredient.name} />
       </Container>
     </>
   );

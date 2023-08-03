@@ -5,13 +5,10 @@ import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Delete, Edit } from "@mui/icons-material";
-import {
-  Button,
-  Box,
-  IconButton,
-  CircularProgress, 
-} from "@mui/material";
+import { Button, Box, IconButton, CircularProgress } from "@mui/material";
 
+import { usersApi } from "../../services/userApi";
+import { useDeleteIngredientMutation } from "../../services/userApi";
 
 const AddBox = styled(Box)({
   display: "flex",
@@ -20,7 +17,6 @@ const AddBox = styled(Box)({
   marginRight: "50px",
 });
 
-
 const StyledButtonCreate = styled(Button)({
   marginTop: "5px",
   color: "black",
@@ -28,38 +24,47 @@ const StyledButtonCreate = styled(Button)({
     color: "black",
   },
 });
+interface Ingredient {
+  _id: string;
+  name: string;
+  quantity: number;
+  expiry: string;
+  type: string;
+  image: string;
+}
+
+interface ApiData {
+  ingredients: Ingredient[];
+}
 
 const IngredientsList: React.FC = () => {
-  const [ingredients, setIngredients] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); 
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const navigate = useNavigate();
   const [isBulkDeleteVisible, setBulkDeleteVisible] = useState(false);
-  
-  useEffect(() => {
-    const fetchIngredients = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/ingredients",
-          {
-            headers: {
-              Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YmZkZDg0Y2E0YzM1NTFjOTU2ZTEzZSIsIm5hbWUiOiJzaGEiLCJlbWFpbCI6InNoYW1pbGtvdHRhOTlAZ21haWwuY29tIiwiYWN0aXZlIjp0cnVlLCJwYXNzd29yZCI6IiQyYiQxMiRXTmtLdll3eGxKdkNHRC5lSi5WNFBlY0FqeWR4SVphZmV1VWtNLjlURmNud3RCcXZrckRSNiIsInJvbGUiOiJVU0VSIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yNVQxNDozNDo0NC4yMjFaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yNVQxNDozNDo0NC4yMjFaIiwiX192IjowfSwiaWF0IjoxNjkwMjk2MzU3fQ.xZn1KSQ6prK6v39xs5iVFgDUAKC1ipHmCmZ6b7K-b6o`,
-              "ngrok-skip-browser-warning": true,
-            },
-          }
-        );
 
-        const data = response.data.data.ingredients;
-        setIngredients(data);
-        setLoading(false);
-  
+  const { data, error, isLoading, refetch } =
+    usersApi.endpoints.getIngredients.useQuery();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await refetch();
+        const responseData = data?.data?.ingredients;
+        if (responseData) {
+          setIngredients(responseData);
+        }
       } catch (error) {
-        console.error("Error fetching ingredients:", error);
-        setLoading(false); 
+        console.error("Error while fetching user data:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchIngredients();
-  }, []);
+
+    fetchData();
+  }, [refetch]);
+  console.log("data", data);
 
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 150 },
@@ -82,7 +87,6 @@ const IngredientsList: React.FC = () => {
       sortable: true,
 
       valueFormatter: (params) => {
-
         const originalDateStr = params.value as string;
         const formattedDate = originalDateStr.split("T")[0];
         return formattedDate;
@@ -97,12 +101,17 @@ const IngredientsList: React.FC = () => {
       sortable: false,
       renderCell: (params) => (
         <Box display="flex" alignItems="center" gap={2}>
-          <IconButton onClick={(event) => handleEditClick(params.id as string, event)}>
+          <IconButton
+            onClick={(event) => handleEditClick(params.id as string, event)}
+          >
             <Edit />
           </IconButton>
-          <IconButton onClick={(event) => handleDeleteOneClick([params.id as string], event)}>
-      <Delete />
-            
+          <IconButton
+            onClick={(event) =>
+              handleDeleteOneClick([params.id as string], event)
+            }
+          >
+            <Delete />
           </IconButton>
         </Box>
       ),
@@ -119,32 +128,32 @@ const IngredientsList: React.FC = () => {
   const handleCreateClick = () => {
     navigate("/ingredients/create");
   };
+  // const { mutateAsync } = usersApi.endpoints.deleteIngredient;
+  const [deleteIngredientMutation] = useDeleteIngredientMutation();
 
-  const handleDeleteOneClick = (ingredientIds: string[], clickEvent: React.MouseEvent) => {
+  const handleDeleteOneClick = async (
+    ingredientIds: string[],
+    clickEvent: React.MouseEvent
+  ) => {
     clickEvent.stopPropagation();
-    axios
-      .delete(`https://38ef-150-129-102-218.ngrok-free.app/api/ingredients`, {
-        headers: {
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YzFlYjMyNTg0Mjk4YjUxNjI1YWNkZiIsIm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AcGFsbGF0ZS5jb20iLCJhY3RpdmUiOnRydWUsInBhc3N3b3JkIjoiJDJiJDEyJE9sbHBmSmR3akNHV2F3cnNJeHgwSnVqVUxOZ2NsTXpSejUwVjZwN2V3elFJMERiRTR2LjdtIiwicm9sZSI6IkFETUlOIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yMFQxMjoyMjozOC42NThaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yMVQwOToyNToyNS4yOTdaIiwiX192IjowfSwiaWF0IjoxNjkwODA2OTk0fQ.7vspbw1A1N019ewYYojPHS8AyMlHzlxk134f_c5GlUI`,
-          "ngrok-skip-browser-warning": true,
-        },
-        data:{
-          ingredientId: ingredientIds,
-        }
-      })
-      .then((response) => {
-        setIngredients((prevIngredients) =>
-          prevIngredients.filter(
-            (ingredient) => !ingredientIds.includes(ingredient._id)
-          )
-        );
-      })
-      .catch((error) => {
-        console.error("Error while deleting ingredients:", error);
-      });
+
+    try {
+      await deleteIngredientMutation.mutateAsync(ingredientIds);
+
+      setIngredients((prevIngredients) =>
+        prevIngredients.filter(
+          (ingredient) => !ingredientIds.includes(ingredient._id)
+        )
+      );
+    } catch (error) {
+      console.error("Error while deleting ingredients:", error);
+    }
   };
 
-  const handleEditClick = (ingredientId:string,clickEvent: React.MouseEvent) => {
+  const handleEditClick = (
+    ingredientId: string,
+    clickEvent: React.MouseEvent
+  ) => {
     clickEvent.stopPropagation();
     navigate(`/ingredients/${ingredientId}/editForm`);
   };

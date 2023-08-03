@@ -3,50 +3,57 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import { Typography } from "@mui/material";
 import styled from "@emotion/styled";
-import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
+import { usersApi } from "../../services/userApi";
+import { UserData } from "./userTypes";
+import { AxiosResponse } from "axios";
 
 const TypographyUser = styled(Typography)({
-  margin:'10px',
+  margin: "10px",
   fontWeight: "bold",
-})
+});
 
 const LoadingComponent: React.FC = () => {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
       <CircularProgress />
     </div>
   );
 };
 
 const UserList: React.FC = () => {
-  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(
-          'http://localhost:5000/api/users',
-          {
-            headers: {
-              Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YzFlYjMyNTg0Mjk4YjUxNjI1YWNkZiIsIm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AcGFsbGF0ZS5jb20iLCJhY3RpdmUiOnRydWUsInBhc3N3b3JkIjoiJDJiJDEyJE9sbHBmSmR3akNHV2F3cnNJeHgwSnVqVUxOZ2NsTXpSejUwVjZwN2V3elFJMERiRTR2LjdtIiwicm9sZSI6IkFETUlOIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yMFQxMjoyMjozOC42NThaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yMVQwOToyNToyNS4yOTdaIiwiX192IjowfSwiaWF0IjoxNjkwODA2OTk0fQ.7vspbw1A1N019ewYYojPHS8AyMlHzlxk134f_c5GlUI`,
-              "ngrok-skip-browser-warning": true,
-            },
-          }
-        );
+  const [userList, setUserList] = useState<UserData[]>([]);
 
-        const data = response.data.data.users;
-        setUsers(data);
-        setLoading(false);
+  const { data, error, isLoading } = usersApi.endpoints.getUsers.useQuery();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const responseData = data?.data?.users;
+        if (responseData) {
+          setUserList(responseData);
+        }
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error while fetching user data:", error);
+      } finally {
         setLoading(false);
       }
     };
-    fetchUsers();
-  }, []);
+
+    fetchData();
+  }, [data]);
+
+  // console.log("users", users)
+  console.log("userList", userList);
 
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 250 },
@@ -60,17 +67,24 @@ const UserList: React.FC = () => {
   };
 
   return (
-    <div style={{ marginLeft: '250px', marginTop: '70px' }}>
-      <TypographyUser>
-        Users
-      </TypographyUser>
-      <div style={{ height: 400, width: "95%", boxShadow: '0px 2px 4px rgba(4, 4, 1, 0.4)', borderRadius: "8px" }}>
+    <div style={{ marginLeft: "250px", marginTop: "70px" }}>
+      <TypographyUser>Users</TypographyUser>
+      <div
+        style={{
+          height: 400,
+          width: "95%",
+          boxShadow: "0px 2px 4px rgba(4, 4, 1, 0.4)",
+          borderRadius: "8px",
+        }}
+      >
         {loading ? (
           <LoadingComponent />
         ) : (
+          // Check if "userList" is not empty before rendering the DataGrid
+
           <DataGrid
             columns={columns}
-            rows={users}
+            rows={userList}
             pagination
             onRowClick={handleRowClick}
             getRowId={(row) => row._id}
