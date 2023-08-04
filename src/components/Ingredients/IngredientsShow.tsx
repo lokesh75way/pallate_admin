@@ -68,9 +68,10 @@ const StyledButton = styled(Button)({
 
 const IngredientShowPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const ingredientId = id || "";
 
   const navigate = useNavigate();
-  const { data: ingredient } = useGetIngredientByIdQuery(id);
+  const { data: ingredient } = useGetIngredientByIdQuery(ingredientId);
   console.log(ingredient)
   
   const handleAddButton = () => {
@@ -101,7 +102,10 @@ const IngredientShowPage: React.FC = () => {
         <Quantity>
           Quantity: {ingredient.data.ingredient.quantity} {ingredient.unit}
         </Quantity>
-        {/* <Date>Expiry: {ingredient.expiry.split("T")[0]}</Date> */}
+        <Quantity>
+          Price: {ingredient.data.ingredient.price}
+        </Quantity>
+
         <Date>Expiry: {ingredient.data.ingredient.expiry.split("T")[0]}</Date>
 
 

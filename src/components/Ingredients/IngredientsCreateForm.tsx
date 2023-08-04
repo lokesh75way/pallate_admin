@@ -8,7 +8,6 @@ import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import SaveIcon from "@mui/icons-material/Save";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
-import axios from "axios";
 import { useTheme } from "@mui/material/styles";
 import { useCreateIngredientMutation } from "../../services/userApi";
 
@@ -97,6 +96,7 @@ interface FormValues {
   quantity: number;
   expiry: string;
   type: string;
+  price:number;
   image: File;
 }
 
@@ -115,7 +115,7 @@ const IngredientsCreateForm: React.FC = () => {
     setValue,
   } = useForm<FormValues>();
 
-   const [createIngredient] = useCreateIngredientMutation(); // Using the generated mutation hook
+   const [createIngredient] = useCreateIngredientMutation();
 
 
   const onSubmit = async (data: FormValues) => {
@@ -126,6 +126,7 @@ const IngredientsCreateForm: React.FC = () => {
       formData.append("quantity", data.quantity.toString());
       formData.append("expiry", data.expiry);
       formData.append("type", data.type);
+      formData.append("price",data.price.toString())
       formData.append("image", data.image as File);
 
       await createIngredient(formData);
@@ -139,6 +140,7 @@ const IngredientsCreateForm: React.FC = () => {
         quantity: 0,
         expiry: new Date().toISOString().slice(0, 10),
         type: "",
+        price:0,
         // image: null,
       });
     } catch (error) {
@@ -261,7 +263,21 @@ const IngredientsCreateForm: React.FC = () => {
             </FormControl>
           )}
         />
-
+        <Controller
+              name="price"
+              control={control}
+              defaultValue={0}
+              rules={{ required: "Price is required" }}
+              render={({ field }) => (
+                <TextField
+                  label="Price"
+                  type="price"
+                  {...field}
+                  error={!!errors.price}
+                  helperText={errors.price?.message}
+                />
+              )}
+            />
         <Controller
           name="expiry"
           control={control}
@@ -278,6 +294,7 @@ const IngredientsCreateForm: React.FC = () => {
           )}
         />
 
+            
         <Controller
           name="image"
           control={control}
@@ -312,7 +329,7 @@ const IngredientsCreateForm: React.FC = () => {
 
         <Snackbar
           open={isSnackbarOpen}
-          autoHideDuration={3000}
+          autoHideDuration={1000}
           onClose={handleCloseSnackbar}
         >
           <MuiAlert

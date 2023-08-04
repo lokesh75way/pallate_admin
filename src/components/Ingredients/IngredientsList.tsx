@@ -24,25 +24,23 @@ const StyledButtonCreate = styled(Button)({
     color: "black",
   },
 });
-interface Ingredient {
+interface IngredientData {
   _id: string;
   name: string;
   quantity: number;
   expiry: string;
   type: string;
+  price: number;
   image: string;
 }
 
-interface ApiData {
-  ingredients: Ingredient[];
-}
-
 const IngredientsList: React.FC = () => {
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [ingredients, setIngredients] = useState<IngredientData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const navigate = useNavigate();
   const [isBulkDeleteVisible, setBulkDeleteVisible] = useState(false);
+  const [deleteActionCompleted, setDeleteActionCompleted] = useState(false);
 
   const { data, error, isLoading, refetch } =
     usersApi.endpoints.getIngredients.useQuery();
@@ -51,27 +49,33 @@ const IngredientsList: React.FC = () => {
     const fetchData = async () => {
       try {
         await refetch();
-        const responseData = data?.data?.ingredients;
+        const responseData = data?.data?.ingredients || [];
+
         if (responseData) {
           setIngredients(responseData);
+          setDeleteActionCompleted(false);
         }
       } catch (error) {
-        console.error("Error while fetching user data:", error);
+        console.error("Error while fetching ingredient data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [refetch]);
-  console.log("data", data);
+    if (error) {
+      console.error("Error while fetching ingredient data:", error);
+      setLoading(false);
+    } else {
+      fetchData();
+    }
+  }, [refetch, error, deleteActionCompleted]);
 
   const columns: GridColDef[] = [
-    { field: "_id", headerName: "ID", width: 150 },
+    { field: "_id", headerName: "ID", width: 120 },
     {
       field: "name",
       headerName: "Name",
-      width: 150,
+      width: 120,
       sortable: true,
       renderHeader: (params) => {
         return (
@@ -80,10 +84,12 @@ const IngredientsList: React.FC = () => {
       },
     },
     { field: "quantity", headerName: "Quantity", width: 100, sortable: true },
+    { field: "type", headerName: "Unit", width: 100, sortable: true },
+    { field: "price", headerName: "Price", width: 100, sortable: true },
     {
       field: "expiry",
-      headerName: "Date",
-      width: 140,
+      headerName: "Expiry",
+      width: 100,
       sortable: true,
 
       valueFormatter: (params) => {
@@ -92,7 +98,7 @@ const IngredientsList: React.FC = () => {
         return formattedDate;
       },
     },
-    { field: "type", headerName: "Unit", width: 100, sortable: true },
+
     { field: "image", headerName: "Picture", width: 200 },
     {
       field: "delete",
@@ -132,17 +138,18 @@ const IngredientsList: React.FC = () => {
   const [deleteIngredientMutation] = useDeleteIngredientMutation();
 
   const handleDeleteOneClick = async (
-    ingredientIds: string[],
+    ingredientId: string[],
     clickEvent: React.MouseEvent
   ) => {
     clickEvent.stopPropagation();
+    console.log("ingredient ids", ingredientId);
 
     try {
-      await deleteIngredientMutation.mutateAsync(ingredientIds);
+      await deleteIngredientMutation(ingredientId);
 
       setIngredients((prevIngredients) =>
         prevIngredients.filter(
-          (ingredient) => !ingredientIds.includes(ingredient._id)
+          (ingredient) => !ingredientId.includes(ingredient._id)
         )
       );
     } catch (error) {
@@ -167,7 +174,6 @@ const IngredientsList: React.FC = () => {
     const ingredientId = params.id;
     navigate(`/ingredients/${ingredientId}/show`);
   };
-
   return (
     <>
       <AddBox>
@@ -185,19 +191,19 @@ const IngredientsList: React.FC = () => {
         style={{
           marginLeft: "230px",
           marginTop: "0px",
-          height: "470px",
+          height: "70%",
           width: "82%",
           boxShadow: "0px 2px 4px rgba(4, 4, 1, 0.4)",
           borderRadius: "8px",
         }}
       >
-        {loading ? (
+        {isLoading ? (
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: "100%",
+              height: "100px",
             }}
           >
             <CircularProgress />
@@ -205,7 +211,7 @@ const IngredientsList: React.FC = () => {
         ) : (
           <DataGrid
             columns={columns}
-            rows={ingredients}
+            rows={data?.data?.ingredients || ""}
             checkboxSelection
             pagination
             onRowClick={handleRowClick}

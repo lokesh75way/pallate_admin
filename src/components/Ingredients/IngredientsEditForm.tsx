@@ -87,13 +87,14 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Ingredient {
+export interface Ingredient {
   id: string;
   userId: string;
   name: string;
   quantity: number;
   expiry: string;
   type: string;
+  price: number;
   image: File | null | string;
 }
 
@@ -103,6 +104,7 @@ interface FormValues {
   quantity: number;
   expiry: string;
   type: string;
+  price:number;
   image: File | null | string;
 }
 
@@ -117,7 +119,8 @@ const StyledAsyncSelect = styled(AsyncSelect)({
 const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
   onSave,
 }) => {
-  const { ingredientId } = useParams<{ ingredientId: string }>();
+  const { ingredientId } = useParams<{ ingredientId: string |undefined}>();
+  const validIngredientId = ingredientId || "";
   // const [ingredientData, setIngredientData] = useState<Ingredient | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDragging, setIsDragging] = useState(false);
@@ -135,8 +138,8 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
   } = useForm<FormValues>();
 
   const { data: ingredientData } =
-    usersApi.endpoints.getIngredientById.useQuery(ingredientId);
-  console.log("data is", ingredientData);
+    usersApi.endpoints.getIngredientById.useQuery(validIngredientId);
+  
 
   useEffect(() => {
     if (ingredientData) {
@@ -147,6 +150,7 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
         expiry: ingredientData.data.ingredient.expiry.split("T")[0],
         type: ingredientData.data.ingredient.type,
         image: ingredientData.data.ingredient.image,
+        price:ingredientData.data.ingredient.image,
       });
     }
   }, [ingredientData]);
@@ -161,6 +165,7 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
         quantity: data.quantity,
         expiry: data.expiry,
         type: data.type,
+        price:data.price,
         image: data.image,
       };
       const response = await updateIngredient(updatedIngredient);
@@ -271,6 +276,21 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
               </Select>
               <FormHelperText>{errors.type?.message}</FormHelperText>
             </FormControl>
+          )}
+        />
+        <Controller
+          name="price"
+          control={control}
+          defaultValue={0}
+          rules={{ required: "Price is required" }}
+          render={({ field }) => (
+            <TextField
+              label="Price"
+              type="number"
+              {...field}
+              error={!!errors.price}
+              helperText={errors.price?.message}
+            />
           )}
         />
 

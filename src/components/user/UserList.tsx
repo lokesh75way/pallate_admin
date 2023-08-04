@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import { Typography } from "@mui/material";
 import styled from "@emotion/styled";
 import CircularProgress from "@mui/material/CircularProgress";
 import { usersApi } from "../../services/userApi";
+
 import { UserData } from "./userTypes";
-import { AxiosResponse } from "axios";
 
 const TypographyUser = styled(Typography)({
   margin: "10px",
@@ -29,31 +29,20 @@ const LoadingComponent: React.FC = () => {
 };
 
 const UserList: React.FC = () => {
-  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  const [userList, setUserList] = useState<UserData[]>([]);
+  const [userList, setUserList] = React.useState<UserData[]>([]);
 
-  const { data, error, isLoading } = usersApi.endpoints.getUsers.useQuery();
+  const {
+    data,
+    error,
+    isLoading, 
+  } = usersApi.endpoints.getUsers.useQuery();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const responseData = data?.data?.users;
-        if (responseData) {
-          setUserList(responseData);
-        }
-      } catch (error) {
-        console.error("Error while fetching user data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [data]);
-
-  // console.log("users", users)
-  console.log("userList", userList);
+    if (!isLoading && !error && data?.data?.users) {
+      setUserList(data.data.users);
+    }
+  }, [data, isLoading, error]);
 
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 250 },
@@ -77,11 +66,9 @@ const UserList: React.FC = () => {
           borderRadius: "8px",
         }}
       >
-        {loading ? (
+        {isLoading ? (
           <LoadingComponent />
         ) : (
-          // Check if "userList" is not empty before rendering the DataGrid
-
           <DataGrid
             columns={columns}
             rows={userList}

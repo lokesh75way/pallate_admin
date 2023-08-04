@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import {Ingredient} from '../components/Ingredients/IngredientsEditForm'
 export const usersApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: "http://localhost:4000/api",
@@ -50,6 +51,7 @@ export const usersApi = createApi({
         url: `ingredients/${updatedIngredient.id}`,
         method: "PUT",
         body: updatedIngredient,
+        
       }),
     }),
     getIngredientById: builder.query<any, string>({
