@@ -6,7 +6,7 @@ import styled from "@emotion/styled";
 import CircularProgress from "@mui/material/CircularProgress";
 import { usersApi } from "../../services/userApi";
 
-import { UserData } from "./userTypes";
+import { UserData } from "../../models/UserModel";
 
 const TypographyUser = styled(Typography)({
   margin: "10px",
@@ -28,6 +28,13 @@ const LoadingComponent: React.FC = () => {
   );
 };
 
+export interface userApiResponse {
+  data: {
+    users: UserData[];
+    // Add more properties if the response object has other data
+  };
+}
+
 const UserList: React.FC = () => {
   const navigate = useNavigate();
   const [userList, setUserList] = React.useState<UserData[]>([]);
@@ -38,11 +45,23 @@ const UserList: React.FC = () => {
     isLoading, 
   } = usersApi.endpoints.getUsers.useQuery();
 
+  // useEffect(() => {
+  //   if (!isLoading && !error && data?.data?.users) {
+  //     setUserList(data.data.users);
+  //   }
+  // }, [data, isLoading, error]);
+
   useEffect(() => {
-    if (!isLoading && !error && data?.data?.users) {
-      setUserList(data.data.users);
+    try{
+      const userResponse:userApiResponse = data as userApiResponse;
+      setUserList(userResponse.data.users)
     }
+    catch(error){
+      console.log("error",error)
+    }
+    
   }, [data, isLoading, error]);
+
 
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 250 },

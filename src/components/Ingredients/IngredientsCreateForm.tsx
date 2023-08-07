@@ -43,6 +43,7 @@ const useStyles = makeStyles((theme) => ({
   formControl: {
     width: "50%",
   },
+
   box: {
     margin: "10px",
     display: "flex",
@@ -83,7 +84,6 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: "white",
     zIndex: 1,
   },
-
 }));
 
 const StyledAsyncSelect = styled(AsyncSelect)({
@@ -96,7 +96,7 @@ interface FormValues {
   quantity: number;
   expiry: string;
   type: string;
-  price:number;
+  price: number;
   image: File;
 }
 
@@ -115,8 +115,7 @@ const IngredientsCreateForm: React.FC = () => {
     setValue,
   } = useForm<FormValues>();
 
-   const [createIngredient] = useCreateIngredientMutation();
-
+  const [createIngredient] = useCreateIngredientMutation();
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -126,12 +125,12 @@ const IngredientsCreateForm: React.FC = () => {
       formData.append("quantity", data.quantity.toString());
       formData.append("expiry", data.expiry);
       formData.append("type", data.type);
-      formData.append("price",data.price.toString())
+      formData.append("price", data.price.toString());
       formData.append("image", data.image as File);
 
       await createIngredient(formData);
       setIsSnackbarOpen(true);
-      console.log(formData)
+      console.log(formData);
       navigate("/ingredients");
 
       reset({
@@ -140,7 +139,7 @@ const IngredientsCreateForm: React.FC = () => {
         quantity: 0,
         expiry: new Date().toISOString().slice(0, 10),
         type: "",
-        price:0,
+        price: 0,
         // image: null,
       });
     } catch (error) {
@@ -264,20 +263,20 @@ const IngredientsCreateForm: React.FC = () => {
           )}
         />
         <Controller
-              name="price"
-              control={control}
-              defaultValue={0}
-              rules={{ required: "Price is required" }}
-              render={({ field }) => (
-                <TextField
-                  label="Price"
-                  type="price"
-                  {...field}
-                  error={!!errors.price}
-                  helperText={errors.price?.message}
-                />
-              )}
+          name="price"
+          control={control}
+          defaultValue={0}
+          rules={{ required: "Price is required" }}
+          render={({ field }) => (
+            <TextField
+              label="Price"
+              type="price"
+              {...field}
+              error={!!errors.price}
+              helperText={errors.price?.message}
             />
+          )}
+        />
         <Controller
           name="expiry"
           control={control}
@@ -294,11 +293,9 @@ const IngredientsCreateForm: React.FC = () => {
           )}
         />
 
-            
         <Controller
           name="image"
           control={control}
-          
           rules={{ required: "Picture is required" }}
           render={() => (
             <section>

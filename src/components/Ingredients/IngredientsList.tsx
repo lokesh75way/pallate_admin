@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Delete, Edit } from "@mui/icons-material";
 import { Button, Box, IconButton, CircularProgress } from "@mui/material";
 
 import { usersApi } from "../../services/userApi";
 import { useDeleteIngredientMutation } from "../../services/userApi";
+import {IngredientData} from "../../models/IngredientModel";
 
 const AddBox = styled(Box)({
   display: "flex",
@@ -24,14 +24,11 @@ const StyledButtonCreate = styled(Button)({
     color: "black",
   },
 });
-interface IngredientData {
-  _id: string;
-  name: string;
-  quantity: number;
-  expiry: string;
-  type: string;
-  price: number;
-  image: string;
+
+export interface ApiResponse {
+  data: {
+    ingredients: IngredientData[];
+  };
 }
 
 const IngredientsList: React.FC = () => {
@@ -44,15 +41,14 @@ const IngredientsList: React.FC = () => {
 
   const { data, error, isLoading, refetch } =
     usersApi.endpoints.getIngredients.useQuery();
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         await refetch();
-        const responseData = data?.data?.ingredients || [];
+        const responseData: ApiResponse = data as ApiResponse;
 
         if (responseData) {
-          setIngredients(responseData);
+          setIngredients(responseData.data.ingredients);
           setDeleteActionCompleted(false);
         }
       } catch (error) {
@@ -68,8 +64,7 @@ const IngredientsList: React.FC = () => {
     } else {
       fetchData();
     }
-  }, [refetch, error, deleteActionCompleted]);
-
+  }, [refetch, error, deleteActionCompleted, loading]);
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 120 },
     {
@@ -134,22 +129,21 @@ const IngredientsList: React.FC = () => {
   const handleCreateClick = () => {
     navigate("/ingredients/create");
   };
-  // const { mutateAsync } = usersApi.endpoints.deleteIngredient;
   const [deleteIngredientMutation] = useDeleteIngredientMutation();
 
   const handleDeleteOneClick = async (
-    ingredientId: string[],
+    ingredientIds: string[],
     clickEvent: React.MouseEvent
   ) => {
     clickEvent.stopPropagation();
-    console.log("ingredient ids", ingredientId);
+
 
     try {
-      await deleteIngredientMutation(ingredientId);
+      await deleteIngredientMutation(ingredientIds);
 
       setIngredients((prevIngredients) =>
         prevIngredients.filter(
-          (ingredient) => !ingredientId.includes(ingredient._id)
+          (ingredient) => !ingredientIds.includes(ingredient._id)
         )
       );
     } catch (error) {
@@ -162,6 +156,7 @@ const IngredientsList: React.FC = () => {
     clickEvent: React.MouseEvent
   ) => {
     clickEvent.stopPropagation();
+    setLoading(true);
     navigate(`/ingredients/${ingredientId}/editForm`);
   };
 
@@ -197,7 +192,7 @@ const IngredientsList: React.FC = () => {
           borderRadius: "8px",
         }}
       >
-        {isLoading ? (
+        {loading ? (
           <div
             style={{
               display: "flex",
@@ -211,7 +206,7 @@ const IngredientsList: React.FC = () => {
         ) : (
           <DataGrid
             columns={columns}
-            rows={data?.data?.ingredients || ""}
+            rows={ingredients}
             checkboxSelection
             pagination
             onRowClick={handleRowClick}

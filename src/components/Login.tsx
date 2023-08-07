@@ -4,8 +4,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useForm } from "react-hook-form";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { useLoginMutation } from "../services/userApi"
 
-import axios from "axios";
 import {
   Dialog,
   DialogTitle,
@@ -68,7 +68,6 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Key to store login status in localStorage
   const LOGIN_STATUS_KEY = "isLoggedIn";
 
   useEffect(() => {
@@ -80,40 +79,37 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
 
     if (storedStatus === "true" && jwtToken) {
       setIsLoggedIn(true);
-      onLoginSuccess(); // Automatically trigger login success if already logged in
+      onLoginSuccess(); 
     }
   }, [onLoginSuccess]);
 
-  const handleFormSubmit = async (data: FormData) => {
-    setLoading(true);
+const [loginMutation] = useLoginMutation();
+const handleFormSubmit = async (data: FormData) => {
+  setLoading(true);
 
-    try {
-      const response = await axios.post(
-        "http://localhost:4000/api/users/login",
-        {
-          email: data.username,
-          password: data.password,
-        }
-      );
+  try {
+    const response = await loginMutation({
+      email: data.username,
+      password: data.password,
+    });
 
-      if (response.status === 200) {
-        setLoading(false);
-        setIsLoggedIn(true);
+    if ('data' in response) {
+      setLoading(false);
+      setIsLoggedIn(true);
 
-        const token = response.data.token;
-        document.cookie = `authToken=${token}; path=/; secure; HttpOnly; SameSite=Strict`;
-        onLoginSuccess();
-      } else {
-        setLoading(false);
-        setShowSnackbar(true);
-      }
-    } catch (error) {
-      console.error("Error while logging in:", error);
+      const token = response.data.token;
+      document.cookie = `authToken=${token}; path=/; secure; HttpOnly; SameSite=Strict`;
+      onLoginSuccess();
+    } else {  
       setLoading(false);
       setShowSnackbar(true);
     }
-  };
-
+  } catch (error) {
+    console.error("Error while logging in:", error);
+    setLoading(false);
+    setShowSnackbar(true);
+  }
+};
   const handleSnackbarClose = () => {
     setShowSnackbar(false);
   };

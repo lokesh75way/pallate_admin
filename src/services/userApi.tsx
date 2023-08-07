@@ -1,5 +1,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import {Ingredient} from '../components/Ingredients/IngredientsEditForm'
+import {ApiResponse} from '../components/Ingredients/IngredientsList'
+import {userApiResponse} from '../components/user/UserList'
+
+
 export const usersApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: "http://localhost:4000/api",
@@ -13,6 +17,8 @@ export const usersApi = createApi({
       return headers;
     },
   }),
+  
+  
   endpoints: (builder) => ({
     login: builder.mutation<{ token: string }, { email: string; password: string }>({
       query: (credentials) => ({
@@ -21,19 +27,18 @@ export const usersApi = createApi({
         body: credentials,
       }),
     }),
-    getUsers: builder.query<any[], void>({
+    getUsers: builder.query<userApiResponse, void>({
       query: () => "users",
 
     }),
-    getIngredients:builder.query<any[],void>({
+    getIngredients:builder.query<ApiResponse,void>({
       query:()=>"ingredients",
     }),
     deleteIngredient: builder.mutation<void, string[]>({
       query: (ingredientIds) => ({
         url: `ingredients`,
         method: "DELETE",
-        
-        data: {
+        body: {
           ingredientId: ingredientIds,
         },
       }),

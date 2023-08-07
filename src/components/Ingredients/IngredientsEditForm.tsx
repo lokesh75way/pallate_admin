@@ -5,8 +5,8 @@ import { styled } from "@mui/material/styles";
 import { useForm, Controller } from "react-hook-form";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 import { useTheme } from "@mui/material/styles";
-import axios from "axios";
 import AsyncSelect from "react-select/async";
 import SaveIcon from "@mui/icons-material/Save";
 import AddIcon from "@mui/icons-material/Add";
@@ -80,6 +80,10 @@ const useStyles = makeStyles((theme) => ({
   users: {
     zIndex: 100,
   },
+  alert: {
+    marginLeft: "600px",
+    backgroundColor: "#002D62",
+  },
   inputLabel: {
     position: "absolute",
     backgroundColor: "white",
@@ -104,7 +108,7 @@ interface FormValues {
   quantity: number;
   expiry: string;
   type: string;
-  price:number;
+  price: number;
   image: File | null | string;
 }
 
@@ -119,15 +123,13 @@ const StyledAsyncSelect = styled(AsyncSelect)({
 const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
   onSave,
 }) => {
-  const { ingredientId } = useParams<{ ingredientId: string |undefined}>();
+  const { ingredientId } = useParams<{ ingredientId: string | undefined }>();
   const validIngredientId = ingredientId || "";
-  // const [ingredientData, setIngredientData] = useState<Ingredient | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const navigate = useNavigate();
   const classes = useStyles();
-  const theme = useTheme();
 
   const {
     handleSubmit,
@@ -137,25 +139,27 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
     formState: { errors },
   } = useForm<FormValues>();
 
-  const { data: ingredientData } =
+  const { data } =
     usersApi.endpoints.getIngredientById.useQuery(validIngredientId);
-  
+  const ingredientData = data?.data.ingredient;
+
+  const [updateIngredient] = useUpdateIngredientMutation();
 
   useEffect(() => {
     if (ingredientData) {
       reset({
-
-        name: ingredientData.data.ingredient.name,
-        quantity: ingredientData.data.ingredient.quantity,
-        expiry: ingredientData.data.ingredient.expiry.split("T")[0],
-        type: ingredientData.data.ingredient.type,
-        image: ingredientData.data.ingredient.image,
-        price:ingredientData.data.ingredient.image,
+        name: ingredientData.name,
+        quantity: ingredientData.quantity,
+        expiry: ingredientData.expiry.split("T")[0],
+        type: ingredientData.type,
+        image: ingredientData.image,
+        price: ingredientData.price,
       });
     }
-  }, [ingredientData]);
-  const [updateIngredient, { isLoading: isUpdating }] =
-    useUpdateIngredientMutation();
+  }, [data, loading]);
+  const handleCloseSnackbar = () => {
+    setIsSnackbarOpen(false);
+  };
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -165,10 +169,12 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
         quantity: data.quantity,
         expiry: data.expiry,
         type: data.type,
-        price:data.price,
+        price: data.price,
         image: data.image,
       };
       const response = await updateIngredient(updatedIngredient);
+
+      setLoading(true);
       onSave(data);
       navigate("/ingredients");
     } catch (error) {
@@ -339,6 +345,21 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
             </section>
           )}
         />
+        <Snackbar
+          open={isSnackbarOpen}
+          autoHideDuration={1000}
+          onClose={handleCloseSnackbar}
+        >
+          <MuiAlert
+            className={classes.alert}
+            onClose={handleCloseSnackbar}
+            severity="success"
+            elevation={6}
+            variant="filled"
+          >
+            Picture added
+          </MuiAlert>
+        </Snackbar>
 
         <Box className={classes.boxItem}>
           <Button
