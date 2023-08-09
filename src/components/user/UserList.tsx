@@ -31,7 +31,7 @@ const LoadingComponent: React.FC = () => {
 export interface userApiResponse {
   data: {
     users: UserData[];
-    // Add more properties if the response object has other data
+
   };
 }
 
@@ -44,12 +44,6 @@ const UserList: React.FC = () => {
     error,
     isLoading, 
   } = usersApi.endpoints.getUsers.useQuery();
-
-  // useEffect(() => {
-  //   if (!isLoading && !error && data?.data?.users) {
-  //     setUserList(data.data.users);
-  //   }
-  // }, [data, isLoading, error]);
 
   useEffect(() => {
     try{

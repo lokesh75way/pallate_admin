@@ -8,12 +8,10 @@ import UserList from "./components/user/UserList";
 import UserShow from "./components/user/UserShow";
 import Layout from "./components/Layout";
 function App() {
-  const handleSave = (data: any) => {
-    console.log("Form data:", data);
-  };
+  
   return (
     <>
-      <Router>
+      <Router>  
         <Layout>
         <Routes>
           <Route>
@@ -26,7 +24,7 @@ function App() {
                 path=":ingredientId/editForm"
                 element={
                   <IngredientsEditForm
-                    onSave={handleSave}
+                    
                   />
                 }
               />

@@ -68,20 +68,8 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const LOGIN_STATUS_KEY = "isLoggedIn";
+  const LOGIN_STATUS_KEY = "isLoggedIn"
 
-  useEffect(() => {
-    const storedStatus = localStorage.getItem(LOGIN_STATUS_KEY);
-    const jwtToken = document.cookie.replace(
-      /(?:(?:^|.*;\s*)authToken\s*=\s*([^;]*).*$)|^.*$/,
-      "$1"
-    );
-
-    if (storedStatus === "true" && jwtToken) {
-      setIsLoggedIn(true);
-      onLoginSuccess(); 
-    }
-  }, [onLoginSuccess]);
 
 const [loginMutation] = useLoginMutation();
 const handleFormSubmit = async (data: FormData) => {
@@ -97,9 +85,6 @@ const handleFormSubmit = async (data: FormData) => {
       setLoading(false);
       setIsLoggedIn(true);
 
-      const token = response.data.token;
-      document.cookie = `authToken=${token}; path=/; secure; HttpOnly; SameSite=Strict`;
-      onLoginSuccess();
     } else {  
       setLoading(false);
       setShowSnackbar(true);
@@ -210,7 +195,7 @@ const handleFormSubmit = async (data: FormData) => {
                   open={showSnackbar}
                   autoHideDuration={3000}
                   onClose={handleSnackbarClose}
-                  message="Invalid credentials"
+                  message={`${process.env.REACT_APP_AUTH_ERROR_MESSAGE}`}
                 />
               </Grid>
             </Grid>

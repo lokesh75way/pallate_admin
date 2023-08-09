@@ -3,13 +3,15 @@ import {Ingredient} from '../components/Ingredients/IngredientsEditForm'
 import {ApiResponse} from '../components/Ingredients/IngredientsList'
 import {userApiResponse} from '../components/user/UserList'
 
+const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+const Authtoken = process.env.REACT_APP_ACCESS_TOKEN;
 
 export const usersApi = createApi({
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:4000/api",
+    baseUrl: `${apiBaseUrl}`,
     prepareHeaders: (headers) => {
       try {
-        const token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY0YzFlYjMyNTg0Mjk4YjUxNjI1YWNkZiIsIm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AcGFsbGF0ZS5jb20iLCJhY3RpdmUiOnRydWUsInBhc3N3b3JkIjoiJDJiJDEyJE9sbHBmSmR3akNHV2F3cnNJeHgwSnVqVUxOZ2NsTXpSejUwVjZwN2V3elFJMERiRTR2LjdtIiwicm9sZSI6IkFETUlOIiwiY3JlYXRlZEF0IjoiMjAyMy0wNy0yMFQxMjoyMjozOC42NThaIiwidXBkYXRlZEF0IjoiMjAyMy0wNy0yMVQwOToyNToyNS4yOTdaIiwiX192IjowfSwiaWF0IjoxNjkwODA2OTk0fQ.7vspbw1A1N019ewYYojPHS8AyMlHzlxk134f_c5GlUI"; 
+        const token = `${Authtoken}`; 
         headers.set("Authorization", token);
       } catch (error) {
         console.error("Error while setting Authorization header:", error);
@@ -41,6 +43,7 @@ export const usersApi = createApi({
         body: {
           ingredientId: ingredientIds,
         },
+        
       }),
     }),
     createIngredient: builder.mutation<any, FormData>({

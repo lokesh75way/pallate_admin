@@ -120,8 +120,8 @@ const StyledAsyncSelect = styled(AsyncSelect)({
   width: "50%",
 });
 
-const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
-  onSave,
+const IngredientsEditForm: React.FC = ({
+  
 }) => {
   const { ingredientId } = useParams<{ ingredientId: string | undefined }>();
   const validIngredientId = ingredientId || "";
@@ -156,7 +156,7 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
         price: ingredientData.price,
       });
     }
-  }, [data, loading]);
+  }, [ingredientData, loading]);
   const handleCloseSnackbar = () => {
     setIsSnackbarOpen(false);
   };
@@ -175,7 +175,7 @@ const IngredientsEditForm: React.FC<IngredientsEditFormProps> = ({
       const response = await updateIngredient(updatedIngredient);
 
       setLoading(true);
-      onSave(data);
+     
       navigate("/ingredients");
     } catch (error) {
       console.error("Error updating ingredient:", error);

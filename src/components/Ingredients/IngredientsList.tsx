@@ -65,6 +65,7 @@ const IngredientsList: React.FC = () => {
       fetchData();
     }
   }, [refetch, error, deleteActionCompleted, loading]);
+  
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 120 },
     {
@@ -130,6 +131,7 @@ const IngredientsList: React.FC = () => {
     navigate("/ingredients/create");
   };
   const [deleteIngredientMutation] = useDeleteIngredientMutation();
+  
 
   const handleDeleteOneClick = async (
     ingredientIds: string[],

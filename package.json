@@ -21,6 +21,7 @@
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.4.0",
     "dotenv": "^16.3.1",
+    "path-browserify": "^1.0.1",
     "react": "^18.2.0",
     "react-data-grid": "^7.0.0-beta.34",
     "react-dom": "^18.2.0",
