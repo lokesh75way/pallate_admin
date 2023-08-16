@@ -6,7 +6,6 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
-import axios from "axios";
 import { useGetIngredientByIdQuery } from "../../services/userApi";
 
 const Container = styled(Box)({

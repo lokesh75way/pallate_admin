@@ -129,7 +129,22 @@ const Header: React.FC = () => {
       </Menu>
 
       {showLoginPopup && (
+        <>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(8px)",
+            zIndex: 1000,
+          }}
+        />
         <Login showPopup={true} onLoginSuccess={() => setShowLoginPopup(false)} />
+      </>
+        
       )}
 
       <Dialog open={showLogoutConfirmation} onClose={() => handleLogoutConfirmation(false)}>

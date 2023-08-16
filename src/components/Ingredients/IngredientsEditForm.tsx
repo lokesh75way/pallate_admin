@@ -28,7 +28,7 @@ import {
 
 const useStyles = makeStyles((theme) => ({
   container: {
-    marginTop: "60px",
+    marginTop: "70px",
     marginLeft: "100px",
     display: "flex",
     flexDirection: "column",
@@ -173,8 +173,10 @@ const IngredientsEditForm: React.FC = ({
         image: data.image,
       };
       const response = await updateIngredient(updatedIngredient);
+      if(response){
 
-      setLoading(true);
+        setLoading(true);
+      }
      
       navigate("/ingredients");
     } catch (error) {

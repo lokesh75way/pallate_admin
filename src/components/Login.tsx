@@ -84,6 +84,7 @@ const handleFormSubmit = async (data: FormData) => {
     if ('data' in response) {
       setLoading(false);
       setIsLoggedIn(true);
+      onLoginSuccess();
 
     } else {  
       setLoading(false);
