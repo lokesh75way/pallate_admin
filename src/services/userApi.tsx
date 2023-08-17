@@ -22,9 +22,16 @@ export const usersApi = createApi({
   
   
   endpoints: (builder) => ({
-    login: builder.mutation<{ token: string }, { email: string; password: string }>({
+    login: builder.mutation<{ token: string;}, { email: string; password: string; }>({
       query: (credentials) => ({
         url: '/users/login',
+        method: 'POST',
+        body: credentials,
+      }),
+    }),
+    forgotPassword: builder.mutation<{ token: string;}, { email: string}>({
+      query: (credentials) => ({
+        url: '/users/forgot-password',
         method: 'POST',
         body: credentials,
       }),
@@ -61,7 +68,14 @@ export const usersApi = createApi({
         body: updatedIngredient,
         
       }),
+    }),resetPassword: builder.mutation<void, { otp: number; email: string; password: string }>({
+      query: ({ otp, email, password }) => ({
+        url: '/users/reset-password',
+        method: 'PUT',
+        body: { otp, email, password },
+      }),
     }),
+
     getIngredientById: builder.query<any, string>({
       query: (ingredientId) => `ingredients/${ingredientId}`,
     }),
@@ -69,4 +83,4 @@ export const usersApi = createApi({
   })
 
 
-export const { useGetUsersQuery,useGetIngredientsQuery,useDeleteIngredientMutation,useCreateIngredientMutation,useUpdateIngredientMutation,useGetIngredientByIdQuery,useLoginMutation } = usersApi;
+export const { useGetUsersQuery,useGetIngredientsQuery,useDeleteIngredientMutation,useCreateIngredientMutation,useUpdateIngredientMutation,useGetIngredientByIdQuery,useLoginMutation,useForgotPasswordMutation,useResetPasswordMutation } = usersApi;

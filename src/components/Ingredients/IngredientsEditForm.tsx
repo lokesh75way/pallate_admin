@@ -15,6 +15,8 @@ import { makeStyles } from "@mui/styles";
 import { userOptions } from "./data";
 import { useUpdateIngredientMutation } from "../../services/userApi";
 import { usersApi } from "../../services/userApi";
+import InputAdornment from "@mui/material/InputAdornment";
+
 import {
   Button,
   Box,
@@ -24,12 +26,14 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
+  CircularProgress,
 } from "@mui/material";
 
 const useStyles = makeStyles((theme) => ({
   container: {
     marginTop: "70px",
     marginLeft: "100px",
+    padding: "20px",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -120,9 +124,7 @@ const StyledAsyncSelect = styled(AsyncSelect)({
   width: "50%",
 });
 
-const IngredientsEditForm: React.FC = ({
-  
-}) => {
+const IngredientsEditForm: React.FC = ({}) => {
   const { ingredientId } = useParams<{ ingredientId: string | undefined }>();
   const validIngredientId = ingredientId || "";
   const [loading, setLoading] = useState<boolean>(false);
@@ -130,6 +132,9 @@ const IngredientsEditForm: React.FC = ({
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const navigate = useNavigate();
   const classes = useStyles();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [isSnackbarOpenFile, setIsSnackbarOpenFile] = useState(false);
 
   const {
     handleSubmit,
@@ -173,11 +178,10 @@ const IngredientsEditForm: React.FC = ({
         image: data.image,
       };
       const response = await updateIngredient(updatedIngredient);
-      if(response){
-
+      if (response) {
         setLoading(true);
       }
-     
+
       navigate("/ingredients");
     } catch (error) {
       console.error("Error updating ingredient:", error);
@@ -203,17 +207,49 @@ const IngredientsEditForm: React.FC = ({
   }, []);
 
   const handleDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    async (acceptedFiles: File[]) => {
       if (acceptedFiles && acceptedFiles.length > 0) {
         const selectedFile = acceptedFiles[0];
-        console.log("Selected picture:", selectedFile);
-        setValue("image", selectedFile);
+        console.log("Selected file:", selectedFile);
 
-        setIsSnackbarOpen(true);
+        if (selectedFile.type.startsWith("image/")) {
+          const reader = new FileReader();
+
+          reader.onload = (e: ProgressEvent<FileReader>) => {
+            const image = new Image();
+            image.src = e.target!.result as string;
+
+            image.onload = () => {
+              if (image.width > 0 && image.height > 0) {
+                setValue("image", selectedFile);
+                setIsLoading(true);
+
+                try {
+                  setTimeout(() => {
+                    setIsLoading(false);
+                    setIsSnackbarOpen(true);
+                  }, 2000);
+                } catch (error) {
+                  console.error("Error uploading image:", error);
+                  setIsLoading(false);
+                }
+              } else {
+                console.log("Selected file is not a valid image.");
+              }
+            };
+          };
+
+          reader.readAsDataURL(selectedFile);
+        } else if (selectedFile.type.startsWith("video/")) {
+          setIsSnackbarOpenFile(true);
+        } else {
+          setIsSnackbarOpenFile(true);
+        }
       }
     },
     [setValue]
   );
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: handleDrop,
     onDragEnter: handleDragEnter,
@@ -309,11 +345,21 @@ const IngredientsEditForm: React.FC = ({
           rules={{ required: "Date is required" }}
           render={({ field }) => (
             <TextField
-              label="Date"
+              label="Expiry"
               type="date"
               {...field}
               error={!!errors.expiry}
               helperText={errors.expiry?.message}
+              inputProps={{
+                min: new Date().toISOString().slice(0, 10),
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <span style={{ visibility: "hidden" }}>Hidden</span>
+                  </InputAdornment>
+                ),
+              }}
             />
           )}
         />
@@ -329,7 +375,7 @@ const IngredientsEditForm: React.FC = ({
                   border: isDragging
                     ? "2px dashed #002D62"
                     : "2px solid transparent",
-                  padding: "10px",
+                  padding: "7px",
                   borderRadius: "4px",
                   display: "flex",
                   alignItems: "center",
@@ -337,12 +383,25 @@ const IngredientsEditForm: React.FC = ({
                 }}
               >
                 <input {...getInputProps()} />
-                <Button
-                  startIcon={<AddAPhotoIcon />}
-                  className={classes.button}
-                >
-                  Upload or Drag Pictures
-                </Button>
+                {isLoading ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "30px",
+                    }}
+                  >
+                    <CircularProgress />
+                  </div>
+                ) : (
+                  <Button
+                    startIcon={<AddAPhotoIcon />}
+                    className={classes.button}
+                  >
+                    Upload or Drag Pictures
+                  </Button>
+                )}
               </div>
             </section>
           )}
@@ -360,6 +419,21 @@ const IngredientsEditForm: React.FC = ({
             variant="filled"
           >
             Picture added
+          </MuiAlert>
+        </Snackbar>
+        <Snackbar
+          open={isSnackbarOpenFile}
+          autoHideDuration={1000}
+          onClose={handleCloseSnackbar}
+        >
+          <MuiAlert
+            className={classes.alert}
+            onClose={handleCloseSnackbar}
+            severity="success"
+            elevation={6}
+            variant="filled"
+          >
+            Not an image
           </MuiAlert>
         </Snackbar>
 

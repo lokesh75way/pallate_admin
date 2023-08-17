@@ -5,18 +5,17 @@ import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
 import { Delete, Edit } from "@mui/icons-material";
 import { Button, Box, IconButton, CircularProgress } from "@mui/material";
-
 import { usersApi } from "../../services/userApi";
 import { useDeleteIngredientMutation } from "../../services/userApi";
 import {IngredientData} from "../../models/IngredientModel";
 import { makeStyles } from "@mui/styles";
 
-
 const AddBox = styled(Box)({
   display: "flex",
   justifyContent: "flex-end",
-  marginTop: "50px",
+  marginTop: "55px",
   marginRight: "50px",
+  padding:'3px',
 });
 
 const StyledButtonCreate = styled(Button)({
@@ -46,10 +45,9 @@ const IngredientsList: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const navigate = useNavigate();
   const classes = useStyles();
-
   const [isBulkDeleteVisible, setBulkDeleteVisible] = useState(false);
   const [deleteActionCompleted, setDeleteActionCompleted] = useState(false);
-
+  
   const { data, error, isLoading, refetch } =
     usersApi.endpoints.getIngredients.useQuery();
   useEffect(() => {

@@ -7,7 +7,6 @@ import AddIcon from "@mui/icons-material/Add";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import SaveIcon from "@mui/icons-material/Save";
 
-
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import { useTheme } from "@mui/material/styles";
@@ -34,6 +33,7 @@ const useStyles = makeStyles((theme) => ({
   container: {
     marginTop: "70px",
     marginLeft: "100px",
+    padding:'20px',
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -72,7 +72,6 @@ const useStyles = makeStyles((theme) => ({
   boxItem: {
     display: "flex",
     justifyContent: "space-between",
-
     width: "50%",
   },
 
@@ -113,7 +112,7 @@ const IngredientsCreateForm: React.FC = () => {
 
   const navigate = useNavigate();
   const theme = useTheme();
-  const [isLoading, setIsLoading] = useState(false); 
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     handleSubmit,
@@ -179,59 +178,48 @@ const IngredientsCreateForm: React.FC = () => {
       if (acceptedFiles && acceptedFiles.length > 0) {
         const selectedFile = acceptedFiles[0];
         console.log("Selected file:", selectedFile);
-  
 
         if (selectedFile.type.startsWith("image/")) {
           const reader = new FileReader();
-  
+
           reader.onload = (e: ProgressEvent<FileReader>) => {
             const image = new Image();
             image.src = e.target!.result as string;
-  
-            image.onload = () => {
 
+            image.onload = () => {
               if (image.width > 0 && image.height > 0) {
                 setValue("image", selectedFile);
                 setIsLoading(true);
-  
-                try {
 
+                try {
                   setTimeout(() => {
-                    setIsLoading(false); 
-                    setIsSnackbarOpen(true); 
+                    setIsLoading(false);
+                    setIsSnackbarOpen(true);
                   }, 2000);
                 } catch (error) {
                   console.error("Error uploading image:", error);
-                  setIsLoading(false); 
+                  setIsLoading(false);
                 }
               } else {
-
                 console.log("Selected file is not a valid image.");
               }
             };
           };
-  
+
           reader.readAsDataURL(selectedFile);
         } else if (selectedFile.type.startsWith("video/")) {
-
-
           setIsSnackbarOpenFile(true);
         } else {
-
           setIsSnackbarOpenFile(true);
-
         }
       }
     },
     [setValue]
   );
-  
-  
-  
+
   const handleCloseSnackbar = () => {
     setIsSnackbarOpen(false);
     setIsSnackbarOpenFile(false);
-
   };
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -352,49 +340,49 @@ const IngredientsCreateForm: React.FC = () => {
             />
           )}
         />
- <Controller
-        name="image"
-        control={control}
-        rules={{ required: "Picture is required" }}
-        render={() => (
-          <section>
-            <div
-              {...getRootProps()}
-              style={{
-                border: isDragging
-                  ? "2px dashed #002D62"
-                  : "2px solid transparent",
-                padding: "7px",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <input {...getInputProps()} />
-              {isLoading ? ( 
-                <div
+        <Controller
+          name="image"
+          control={control}
+          rules={{ required: "Picture is required" }}
+          render={() => (
+            <section>
+              <div
+                {...getRootProps()}
                 style={{
+                  border: isDragging
+                    ? "2px dashed #002D62"
+                    : "2px solid transparent",
+                  padding: "7px",
+                  borderRadius: "4px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  height: "30px",
                 }}
               >
-                <CircularProgress />
+                <input {...getInputProps()} />
+                {isLoading ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "30px",
+                    }}
+                  >
+                    <CircularProgress />
+                  </div>
+                ) : (
+                  <Button
+                    startIcon={<AddAPhotoIcon />}
+                    className={classes.button}
+                  >
+                    Upload or Drag Pictures
+                  </Button>
+                )}
               </div>
-              ) : (
-                <Button
-                  startIcon={<AddAPhotoIcon />}
-                  className={classes.button}
-                >
-                  Upload or Drag Pictures
-                </Button>
-              )}
-            </div>
-          </section>
-        )}
-      />
+            </section>
+          )}
+        />
 
         <Snackbar
           open={isSnackbarOpen}

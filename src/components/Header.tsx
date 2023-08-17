@@ -81,14 +81,14 @@ const Header: React.FC = () => {
     <>
       <StyledAppBar position="fixed">
         <Toolbar>
-          <IconButton
+          {/* <IconButton
             edge="start"
             color="inherit"
             aria-label="menu"
             onClick={handleSidebarOpen}
           >
             <MenuIcon />
-          </IconButton>
+          </IconButton> */}
 
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Palette
