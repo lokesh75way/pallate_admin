@@ -29,7 +29,7 @@ export const usersApi = createApi({
         body: credentials,
       }),
     }),
-    forgotPassword: builder.mutation<{ token: string;}, { email: string}>({
+    forgotPassword: builder.mutation<{ token: string}, { email: string}>({
       query: (credentials) => ({
         url: '/users/forgot-password',
         method: 'POST',

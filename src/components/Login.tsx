@@ -4,7 +4,10 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useForm } from "react-hook-form";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import CloseIcon from "@mui/icons-material/Close";
 import { useLoginMutation } from "../services/userApi";
+import MuiAlert from "@mui/material/Alert";
+
 import {
   useForgotPasswordMutation,
   useResetPasswordMutation,
@@ -71,7 +74,25 @@ const DialogBox = styled(Dialog)({
   width: "80%",
 });
 const BlueCircularProgress = styled(CircularProgress)({
-  color: "blue",
+  color: "#002D62",
+});
+const MuiAlertOtp = styled(MuiAlert)({
+  backgroundColor: "#002D62",
+  color: "white",
+  zIndex: "1500",
+  marginLeft: "530px",
+  marginTop: "-900px",
+});
+const MuiAlertReset = styled(MuiAlert)({
+  backgroundColor: "#002D62",
+  color: "white",
+  zIndex: "1500",
+  marginLeft: "500px",
+  marginTop: "-900px",
+});
+const MuiAlertUser = styled(MuiAlert)({
+  marginLeft: "550px",
+  marginTop: "-750px",
 });
 
 interface LoginProps {
@@ -93,6 +114,10 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
 
   const [loading, setLoading] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
+  const [showSnackbarOtp, setShowSnackbarOtp] = useState(false);
+  const [showSnackbarReset, setShowSnackbarReset] = useState(false);
+  const [userNotFound, setUserNotFound] = useState(false);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
@@ -100,6 +125,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [receivedOtp, setReceivedOtp] = useState<number>(0);
   const [newPassword, setNewPassword] = useState("");
+  const [emailEntered, setEmailEntered] = useState(false);
 
   // Mutations
   const [resetPassword, { isLoading, isError }] = useResetPasswordMutation();
@@ -119,9 +145,11 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setRecoveryEmail(event.target.value);
+    setEmailEntered(!!event.target.value);
   };
 
   const handlePasswordRecoverySubmit = async () => {
+    setShowSnackbarReset(true);
     try {
       const response = await resetPassword({
         otp: receivedOtp,
@@ -134,6 +162,9 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
       console.error("Error resetting password:", error);
     }
   };
+  const handleSnackbar = () => {
+    setShowSnackbarReset(true);
+  };
 
   const handlePasswordResetSubmit = async () => {
     setShowResetDialog(false);
@@ -143,8 +174,15 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
     const response = await forgotPasswordMutation({
       email: recoveryEmail,
     });
+    console.log(response);
     setLoading(false);
-    setShowResetDialog(true);
+
+    if ("error" in response) {
+      setUserNotFound(true);
+    } else {
+      setShowSnackbarOtp(true);
+      setShowResetDialog(true);
+    }
   };
 
   const handleFormSubmit = async (data: FormData) => {
@@ -173,6 +211,9 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   };
   const handleSnackbarClose = () => {
     setShowSnackbar(false);
+    setShowSnackbarOtp(false);
+    setShowSnackbarReset(false);
+    setUserNotFound(false);
   };
 
   if (isLoggedIn) {
@@ -204,6 +245,15 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
 
       <Dialog open={showPopup}>
         <LoginContainer>
+          <Snackbar
+            open={showSnackbarReset}
+            // autoHideDuration={2000}
+            onClose={handleSnackbarClose}
+          >
+            <MuiAlertReset onClose={handleSnackbarClose} variant="filled">
+              Password reset successfully
+            </MuiAlertReset>
+          </Snackbar>
           <LoginText>Login</LoginText>
           <form onSubmit={handleSubmit(handleFormSubmit)}>
             <Grid container spacing={2}>
@@ -288,6 +338,24 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
       {/* Forget password  */}
       <Dialog open={showRecoveryDialog} onClose={handleCloseRecoveryDialog}>
         <ResetContainer>
+            <DialogTitle
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              position: "relative", 
+            }}
+          >
+            <IconButton
+              edge="end"
+              color="inherit"
+              aria-label="close"
+              onClick={handleCloseRecoveryDialog}
+              style={{ position: "absolute", right: 0, top: 0 }} 
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
           <LoginText>Forgot Password</LoginText>
           <form onSubmit={handlePasswordResetSubmit}>
             <Grid container spacing={2}>
@@ -306,7 +374,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                   fullWidth
                   variant="contained"
                   color="primary"
-                  disabled={loading}
+                  disabled={loading || !emailEntered}
                   onClick={handleChangePassword}
                 >
                   {loading ? (
@@ -316,6 +384,21 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                   )}
                 </StyledButton>
               </Grid>
+              {userNotFound && (
+                <Snackbar
+                  open={userNotFound}
+                  autoHideDuration={3000}
+                  onClose={handleSnackbarClose}
+                >
+                  <MuiAlertUser
+                    onClose={handleSnackbarClose}
+                    severity="error"
+                    variant="filled"
+                  >
+                    User not found!
+                  </MuiAlertUser>
+                </Snackbar>
+              )}
             </Grid>
           </form>
         </ResetContainer>
@@ -324,7 +407,44 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
       {/* Reset password */}
       <Dialog open={showResetDialog} onClose={handleCloseRecoveryDialog}>
         <LoginContainer>
-          <LoginText>Forgot Password</LoginText>
+          <Snackbar
+            open={showSnackbarReset}
+            autoHideDuration={2000}
+            onClose={handleSnackbarClose}
+          >
+            <MuiAlertReset onClose={handleSnackbarClose} variant="filled">
+              Password reset successfully
+            </MuiAlertReset>
+          </Snackbar>
+          <Snackbar
+            open={showSnackbarOtp}
+            autoHideDuration={2000}
+            onClose={handleSnackbarClose}
+          >
+            <MuiAlertOtp onClose={handleSnackbarClose} variant="filled">
+              OTP sent successfully
+            </MuiAlertOtp>
+          </Snackbar>
+          <DialogTitle
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              position: "relative", 
+            }}
+          >
+            <IconButton
+              edge="end"
+              color="inherit"
+              aria-label="close"
+              onClick={handleCloseRecoveryDialog}
+              style={{ position: "absolute", right: 0, top: 10 }} 
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+            <LoginText>Forgot Password</LoginText>
+
           <form onSubmit={handlePasswordRecoverySubmit}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
