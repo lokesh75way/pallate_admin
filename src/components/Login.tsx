@@ -11,7 +11,7 @@ import MuiAlert from "@mui/material/Alert";
 import {
   useForgotPasswordMutation,
   useResetPasswordMutation,
-} from "../services/userApi";
+} from "../services/userApi"; 
 
 import {
   Dialog,
@@ -454,6 +454,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                   label="Enter OTP"
                   value={receivedOtp || ""}
                   onChange={(e) => setReceivedOtp(Number(e.target.value))}
+                  
                 />
               </Grid>
               <Grid item xs={12}>

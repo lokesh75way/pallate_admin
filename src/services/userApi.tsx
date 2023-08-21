@@ -20,7 +20,6 @@ export const usersApi = createApi({
     },
   }),
   
-  
   endpoints: (builder) => ({
     login: builder.mutation<{ token: string;}, { email: string; password: string; }>({
       query: (credentials) => ({
@@ -38,7 +37,6 @@ export const usersApi = createApi({
     }),
     getUsers: builder.query<userApiResponse, void>({
       query: () => "users",
-
     }),
     getIngredients:builder.query<ApiResponse,void>({
       query:()=>"ingredients",
@@ -50,7 +48,6 @@ export const usersApi = createApi({
         body: {
           ingredientId: ingredientIds,
         },
-        
       }),
     }),
     createIngredient: builder.mutation<any, FormData>({
@@ -58,7 +55,6 @@ export const usersApi = createApi({
         url: 'ingredients',
         method: 'POST',
         body: formData,
-        
       }),
     }),
     updateIngredient: builder.mutation<any, Partial<Ingredient>>({
@@ -66,9 +62,9 @@ export const usersApi = createApi({
         url: `ingredients/${updatedIngredient.id}`,
         method: "PUT",
         body: updatedIngredient,
-        
       }),
-    }),resetPassword: builder.mutation<void, { otp: number; email: string; password: string }>({
+    }),
+    resetPassword: builder.mutation<void, { otp: number; email: string; password: string }>({
       query: ({ otp, email, password }) => ({
         url: '/users/reset-password',
         method: 'PUT',

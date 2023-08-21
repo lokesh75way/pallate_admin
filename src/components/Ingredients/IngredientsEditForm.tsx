@@ -52,28 +52,28 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
   },
   button: {
-    margin: "5px",
-    border: "2px solid #002D62",
-    color: "black",
+    margin: "5px !important",
+    border: "2px solid #002D62 !important",
+    color: "black  !important",
     "&:hover": {
-      backgroundColor: "white",
-      color: "black",
+      backgroundColor: "white !important",
+      color: "black !important",
     },
   },
   button1: {
-    color: "black",
-    backgroundColor: "white",
+    color: "black !important",
+    backgroundColor: "white !important",
     "&:hover": {
-      backgroundColor: "white",
-      color: "black",
+      backgroundColor: "white !important",
+      color: "black !important",
     },
   },
   button2: {
-    backgroundColor: "#002D62",
+    backgroundColor: "#002D62   !important",
 
-    color: "white",
+    color: "white !important",
     "&:hover": {
-      color: "white",
+      color: "white !important",
     },
   },
   boxItem: {
@@ -86,7 +86,7 @@ const useStyles = makeStyles((theme) => ({
   },
   alert: {
     marginLeft: "600px",
-    backgroundColor: "#002D62",
+    backgroundColor: "#002D62 !important",
   },
   inputLabel: {
     position: "absolute",
@@ -144,13 +144,14 @@ const IngredientsEditForm: React.FC = ({}) => {
     formState: { errors },
   } = useForm<FormValues>();
 
-  const { data } =
+  const { data,refetch } =
     usersApi.endpoints.getIngredientById.useQuery(validIngredientId);
   const ingredientData = data?.data.ingredient;
 
   const [updateIngredient] = useUpdateIngredientMutation();
 
   useEffect(() => {
+    refetch();
     if (ingredientData) {
       reset({
         name: ingredientData.name,
@@ -353,13 +354,7 @@ const IngredientsEditForm: React.FC = ({}) => {
               inputProps={{
                 min: new Date().toISOString().slice(0, 10),
               }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <span style={{ visibility: "hidden" }}>Hidden</span>
-                  </InputAdornment>
-                ),
-              }}
+              
             />
           )}
         />

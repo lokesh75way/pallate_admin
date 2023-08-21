@@ -7,7 +7,7 @@ import { Delete, Edit } from "@mui/icons-material";
 import { Button, Box, IconButton, CircularProgress } from "@mui/material";
 import { usersApi } from "../../services/userApi";
 import { useDeleteIngredientMutation } from "../../services/userApi";
-import {IngredientData} from "../../models/IngredientModel";
+import { IngredientData } from "../../models/IngredientModel";
 import { makeStyles } from "@mui/styles";
 
 const AddBox = styled(Box)({
@@ -15,7 +15,7 @@ const AddBox = styled(Box)({
   justifyContent: "flex-end",
   marginTop: "55px",
   marginRight: "50px",
-  padding:'3px',
+  padding: "3px",
 });
 
 const StyledButtonCreate = styled(Button)({
@@ -28,7 +28,7 @@ const StyledButtonCreate = styled(Button)({
 const useStyles = makeStyles({
   checkboxFocus: {
     "& .MuiDataGrid-cell:focus-within ": {
-      outline: "none",
+      outline: "none !important",
     },
   },
 });
@@ -47,18 +47,20 @@ const IngredientsList: React.FC = () => {
   const classes = useStyles();
   const [isBulkDeleteVisible, setBulkDeleteVisible] = useState(false);
   const [deleteActionCompleted, setDeleteActionCompleted] = useState(false);
-  
+
   const { data, error, isLoading, refetch } =
     usersApi.endpoints.getIngredients.useQuery();
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await refetch();
-        const responseData: ApiResponse = data as ApiResponse;
+        const refetchResult = await refetch(); 
+
+        const responseData: ApiResponse = refetchResult.data as ApiResponse;
 
         if (responseData) {
           setIngredients(responseData.data.ingredients);
           setDeleteActionCompleted(false);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error while fetching ingredient data:", error);
@@ -73,10 +75,8 @@ const IngredientsList: React.FC = () => {
     } else {
       fetchData();
     }
-  }, [refetch, error, deleteActionCompleted, loading]);
+  }, []);
 
-
-  
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 120 },
     {
@@ -142,7 +142,6 @@ const IngredientsList: React.FC = () => {
     navigate("/ingredients/create");
   };
   const [deleteIngredientMutation] = useDeleteIngredientMutation();
-  
 
   const handleDeleteOneClick = async (
     ingredientIds: string[],
@@ -150,9 +149,9 @@ const IngredientsList: React.FC = () => {
   ) => {
     clickEvent.stopPropagation();
 
-
     try {
       await deleteIngredientMutation(ingredientIds);
+      setDeleteActionCompleted(true);
 
       setIngredients((prevIngredients) =>
         prevIngredients.filter(
@@ -182,9 +181,9 @@ const IngredientsList: React.FC = () => {
     const ingredientId = params.id;
     navigate(`/ingredients/${ingredientId}/show`);
   };
-  
+
   return (
-    <div  >
+    <div>
       <AddBox>
         {isBulkDeleteVisible && (
           <IconButton onClick={handleDeleteClick}>
@@ -193,11 +192,11 @@ const IngredientsList: React.FC = () => {
         )}
         <StyledButtonCreate startIcon={<AddIcon />} onClick={handleCreateClick}>
           Create
-        </StyledButtonCreate> 
+        </StyledButtonCreate>
       </AddBox>
 
       <div
-      className={classes.checkboxFocus}
+        className={classes.checkboxFocus}
         style={{
           marginLeft: "230px",
           marginTop: "0px",
@@ -226,7 +225,6 @@ const IngredientsList: React.FC = () => {
             pagination
             onRowClick={handleRowClick}
             onRowSelectionModelChange={handleRowSelectionModelChange}
-            
             getRowId={(row) => row._id}
           />
         )}

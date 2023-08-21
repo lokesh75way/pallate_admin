@@ -6,16 +6,17 @@ import AsyncSelect from "react-select/async";
 import AddIcon from "@mui/icons-material/Add";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import SaveIcon from "@mui/icons-material/Save";
-
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import { useTheme } from "@mui/material/styles";
 import { useCreateIngredientMutation } from "../../services/userApi";
-
 import { userOptions } from "./data";
 import { useDropzone } from "react-dropzone";
 import { makeStyles } from "@mui/styles";
 import InputAdornment from "@mui/material/InputAdornment";
+import { UserData } from "../../models/UserModel";
+import { usersApi } from "../../services/userApi";
+
 
 import {
   Button,
@@ -53,22 +54,23 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
   },
   button: {
-    margin: "5px",
-    border: "2px solid #002D62",
-    color: "black",
+    margin: "5px !important",
+    border: "2px solid #002D62 !important",
+    color: "black !important",
   },
   button1: {
-    color: "black",
-    backgroundColor: "white",
+    color: "black !important",
+    backgroundColor: "white !important",
   },
   button2: {
-    backgroundColor: "#002D62",
-    color: "white",
+    backgroundColor: "#002D62 !important",
+    color: "white !important",
     "&:hover": {
-      backgroundColor: "#002D62",
-      color: "white",
+      backgroundColor: "#002D62 !important",
+      color: "white !important",
     },
   },
+  
   boxItem: {
     display: "flex",
     justifyContent: "space-between",
@@ -79,9 +81,9 @@ const useStyles = makeStyles((theme) => ({
     zIndex: 100,
   },
   alert: {
-    marginTop: "100px",
+    marginTop: "100px ",
     marginLeft: "600px",
-    backgroundColor: "#002D62",
+    backgroundColor: "#002D62 !important",
   },
   inputLabel: {
     position: "absolute",
@@ -94,6 +96,11 @@ const StyledAsyncSelect = styled(AsyncSelect)({
   width: "50%",
 });
 
+interface userApiResponse {
+  data: {
+    users: UserData[];
+  };
+}
 interface FormValues {
   userId: string;
   name: string;
@@ -121,6 +128,10 @@ const IngredientsCreateForm: React.FC = () => {
     formState: { errors },
     setValue,
   } = useForm<FormValues>();
+
+  const { data } = usersApi.endpoints.getUsers.useQuery();
+
+
 
   const [createIngredient] = useCreateIngredientMutation();
 
@@ -163,21 +174,30 @@ const IngredientsCreateForm: React.FC = () => {
       i.label.toLowerCase().includes(inputValue.toLowerCase())
     );
   };
+  const loadOptions = async (inputValue: string) => {
+    try {
 
-  const loadOptions = (
-    inputValue: string,
-    callback: (options: any) => void
-  ) => {
-    setTimeout(() => {
-      callback(filterColors(inputValue));
-    }, 1000);
-  };
-
+      const userResponse:userApiResponse = data as userApiResponse;
+  
+      const filteredUsers = userResponse.data.users.filter((user) =>
+        user.name.toLowerCase().includes(inputValue.toLowerCase())
+      );
+  
+      return filteredUsers.map((user) => ({
+        lable:user._id,
+        label: user.name,
+      }));
+    } catch (error) {
+      console.error("Error loading users:", error);
+      return [];
+    }
+  };  
+  
   const handleDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles && acceptedFiles.length > 0) {
         const selectedFile = acceptedFiles[0];
-        console.log("Selected file:", selectedFile);
+        // console.log("Selected file:", selectedFile);
 
         if (selectedFile.type.startsWith("image/")) {
           const reader = new FileReader();
@@ -231,12 +251,21 @@ const IngredientsCreateForm: React.FC = () => {
   return (
     <div>
       <div className={classes.container}>
-        <StyledAsyncSelect
-          cacheOptions
-          defaultOptions
-          loadOptions={loadOptions}
-          placeholder="UserID"
-          className={classes.users}
+      <Controller
+          name="userId"
+          control={control}
+          rules={{ required: "User is required" }}
+          render={({ field }) => (
+            <StyledAsyncSelect
+              {...field}
+              cacheOptions
+              defaultOptions
+              loadOptions={loadOptions}
+              placeholder="User"
+              className={classes.users}
+
+            />
+          )}
         />
 
         <Controller
@@ -330,13 +359,7 @@ const IngredientsCreateForm: React.FC = () => {
               inputProps={{
                 min: new Date().toISOString().slice(0, 10),
               }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <span style={{ visibility: "hidden" }}>Hidden</span>
-                  </InputAdornment>
-                ),
-              }}
+             
             />
           )}
         />
@@ -421,6 +444,7 @@ const IngredientsCreateForm: React.FC = () => {
             onClick={handleSubmit(onSubmit)}
             startIcon={<SaveIcon />}
           >
+            
             Save
           </Button>
 

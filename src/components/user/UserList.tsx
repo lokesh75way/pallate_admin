@@ -3,8 +3,10 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import { Typography } from "@mui/material";
 import styled from "@emotion/styled";
-import CircularProgress from "@mui/material/CircularProgress";
+
 import { usersApi } from "../../services/userApi";
+import { Button, Box, IconButton, CircularProgress } from "@mui/material";
+import { Delete } from "@mui/icons-material";
 
 import { UserData } from "../../models/UserModel";
 
@@ -38,29 +40,57 @@ export interface userApiResponse {
 const UserList: React.FC = () => {
   const navigate = useNavigate();
   const [userList, setUserList] = React.useState<UserData[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+
 
   const {
     data,
     error,
-    isLoading, 
+    isLoading, refetch
   } = usersApi.endpoints.getUsers.useQuery();
 
   useEffect(() => {
-    try{
-      const userResponse:userApiResponse = data as userApiResponse;
+    const fetchData = async () => {
+      try {
+        const refetchResult = await refetch();
+        const userResponse:userApiResponse = refetchResult.data as userApiResponse;
+
       setUserList(userResponse.data.users)
-    }
-    catch(error){
-      console.log("error",error)
-    }
+      } catch (error) {
+        console.error("Error while fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+      fetchData();
+    
     
   }, [data, isLoading, error]);
-
+const handleDeleteOneClick = async (id: string[], event: any) => {
+  }
 
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 250 },
     { field: "name", headerName: "Name", width: 250, sortable: true },
     { field: "email", headerName: "Email", width: 250, sortable: true },
+    {
+      field: "delete",
+      headerName: "Actions",
+      width: 150,
+      sortable: false,
+      renderCell: (params) => (
+        
+          <IconButton
+            onClick={(event) =>
+              handleDeleteOneClick([params.id as string], event)
+            }
+          >
+            <Delete />
+          </IconButton>
+
+      ),
+    },
   ];
 
   const handleRowClick = (params: any) => {
