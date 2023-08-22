@@ -171,7 +171,6 @@ const IngredientsCreateForm: React.FC = () => {
       const filteredUsers = userResponse.data.users.filter((user) =>
         user.name.toLowerCase().includes(inputValue.toLowerCase())
       );
-  
       return filteredUsers.map((user) => ({
         lable:user._id,
         label: user.name,
@@ -248,6 +247,7 @@ const IngredientsCreateForm: React.FC = () => {
           control={control}
           rules={{ required: "User is required" }}
           render={({ field }) => (
+            <>
             <StyledAsyncSelect
               {...field}
               cacheOptions
@@ -270,7 +270,11 @@ const IngredientsCreateForm: React.FC = () => {
                   color:'black'
                 }),
               }}
-            />
+              />
+              {errors.user && (
+                <span style={{ color: "red" }}>{errors.user.message}</span>
+              )}
+               </>
           )}
         />
 

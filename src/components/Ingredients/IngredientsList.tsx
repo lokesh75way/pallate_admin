@@ -47,6 +47,7 @@ const IngredientsList: React.FC = () => {
   const classes = useStyles();
   const [isBulkDeleteVisible, setBulkDeleteVisible] = useState(false);
   const [deleteActionCompleted, setDeleteActionCompleted] = useState(false);
+  const { data:userList } = usersApi.endpoints.getUsers.useQuery();
 
   const { data, error, isLoading, refetch } =
     usersApi.endpoints.getIngredients.useQuery();
