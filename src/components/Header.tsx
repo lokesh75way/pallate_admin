@@ -3,6 +3,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { styled } from "@mui/material/styles";
 import Sidebar from "./Sidebar";
 import Login from "./Login"; 
+import { useDispatch } from 'react-redux';
+import {logout } from '../store/authReducer';
 
 import { useNavigate } from "react-router-dom";
 import {
@@ -46,10 +48,7 @@ const Header: React.FC = () => {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false); 
   const LOGIN_STATUS_KEY = "isLoggedIn";
   const navigate = useNavigate();
-
-  const handleSidebarOpen = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const dispatch = useDispatch();
 
   const handleSidebarClose = () => {
     setIsSidebarOpen(false);
@@ -72,7 +71,8 @@ const Header: React.FC = () => {
     setShowLogoutConfirmation(false);
     if (confirmed) {
       localStorage.setItem(LOGIN_STATUS_KEY, "false");
-      localStorage.removeItem('authToken');
+      dispatch(logout());
+
       setShowLoginPopup(true);
     }
     navigate("/")
@@ -82,14 +82,7 @@ const Header: React.FC = () => {
     <>
       <StyledAppBar position="fixed">
         <Toolbar>
-          {/* <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={handleSidebarOpen}
-          >
-            <MenuIcon />
-          </IconButton> */}
+         
 
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Palette

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState ,useEffect} from "react";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
@@ -10,7 +10,6 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import { useTheme } from "@mui/material/styles";
 import { useCreateIngredientMutation } from "../../services/userApi";
-import { userOptions } from "./data";
 import { useDropzone } from "react-dropzone";
 import { makeStyles } from "@mui/styles";
 
@@ -102,7 +101,7 @@ interface userApiResponse {
   };
 }
 interface FormValues {
-  userId: string;
+  user: string;
   name: string;
   quantity: number;
   expiry: string;
@@ -182,6 +181,9 @@ const IngredientsCreateForm: React.FC = () => {
       return [];
     }
   };  
+  useEffect(() => {
+    loadOptions("");
+  }, []);
   
   const handleDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -242,7 +244,7 @@ const IngredientsCreateForm: React.FC = () => {
     <div>
       <div className={classes.container}>
       <Controller
-          name="userId"
+          name="user"
           control={control}
           rules={{ required: "User is required" }}
           render={({ field }) => (

@@ -139,6 +139,7 @@ const IngredientsList: React.FC = () => {
   };
 
   const handleCreateClick = () => {
+
     navigate("/ingredients/create");
   };
   const [deleteIngredientMutation] = useDeleteIngredientMutation();

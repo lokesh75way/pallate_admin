@@ -2,6 +2,8 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { Ingredient } from "../components/Ingredients/IngredientsEditForm";
 import { ApiResponse } from "../components/Ingredients/IngredientsList";
 import { userApiResponse } from "../components/user/UserList";
+import { RootState } from '../store/store';
+import { selectAuthToken } from '../store/authReducer'
 
 const apiBaseUrl = process.env.REACT_APP_API_BASE_URL;
 
@@ -10,7 +12,7 @@ export const usersApi = createApi({
     baseUrl: `${apiBaseUrl}`,
     prepareHeaders: (headers, { getState }) => {
       try {
-        const token = localStorage.getItem("authToken");
+        const token = selectAuthToken(getState() as RootState); 
         headers.set("Authorization", `Bearer ${token}`);
       } catch (error) {
         console.error("Error while setting Authorization header:", error);

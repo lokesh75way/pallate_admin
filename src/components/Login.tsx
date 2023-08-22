@@ -8,7 +8,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useLoginMutation } from "../services/userApi";
 import MuiAlert from "@mui/material/Alert";
 import { useDispatch } from 'react-redux';
-import { increment } from '../store/authReducer';
+import { loginToken } from '../store/authReducer';
 
 import {
   useForgotPasswordMutation,
@@ -212,7 +212,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
       if ("data" in response) {
         const userToken:CustomResponse = response.data as unknown as CustomResponse;
         const tokenVal:ApiResponse = userToken.data as unknown as ApiResponse;
-        dispatch(increment(tokenVal.token));
+        dispatch(loginToken(tokenVal.token));
         localStorage.setItem("authToken", tokenVal.token);
 
         setLoading(false);
