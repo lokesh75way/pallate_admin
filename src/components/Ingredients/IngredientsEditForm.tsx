@@ -259,13 +259,13 @@ const IngredientsEditForm: React.FC = ({}) => {
   return (
     <div>
       <div className={classes.container}>
-        <StyledAsyncSelect
+        {/* <StyledAsyncSelect
           cacheOptions
           defaultOptions
           loadOptions={loadOptions}
           placeholder="UserID"
           className={classes.users}
-        />
+        /> */}
 
         <Controller
           name="name"

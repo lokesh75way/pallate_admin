@@ -3,11 +3,10 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import { Typography } from "@mui/material";
 import styled from "@emotion/styled";
-
-import { usersApi } from "../../services/userApi";
 import { IconButton, CircularProgress } from "@mui/material";
 import { Delete } from "@mui/icons-material";
 
+import { usersApi } from "../../services/userApi";
 import { UserData } from "../../models/UserModel";
 
 const TypographyUser = styled(Typography)({
@@ -33,7 +32,6 @@ const LoadingComponent: React.FC = () => {
 export interface userApiResponse {
   data: {
     users: UserData[];
-
   };
 }
 
@@ -42,32 +40,32 @@ const UserList: React.FC = () => {
   const [userList, setUserList] = React.useState<UserData[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
 
-
-  const {
-    data,
-    error,
-    isLoading, refetch
-  } = usersApi.endpoints.getUsers.useQuery();
+  const { data, error, isLoading, refetch } =
+    usersApi.endpoints.getUsers.useQuery();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const refetchResult = await refetch();
-        const userResponse:userApiResponse = refetchResult.data as userApiResponse;
+        const userResponse: userApiResponse =
+          refetchResult.data as userApiResponse;
 
-      setUserList(userResponse.data.users)
+        setUserList(userResponse.data.users);
       } catch (error) {
         console.error("Error while fetching user data:", error);
       } finally {
         setLoading(false);
       }
     };
-    
-      fetchData();
-    
+
+    fetchData();
   }, []);
-const handleDeleteOneClick = async (id: string[], event: any) => {
-  }
+  const handleDeleteOneClick = async (id: string[], clickEvent: React.MouseEvent) => {
+    clickEvent.stopPropagation();
+
+    setUserList(prevUserList => prevUserList.filter(user => user._id !== id[0]));
+  };
+  
 
   const columns: GridColDef[] = [
     { field: "_id", headerName: "ID", width: 250 },
@@ -79,15 +77,13 @@ const handleDeleteOneClick = async (id: string[], event: any) => {
       width: 150,
       sortable: false,
       renderCell: (params) => (
-        
-          <IconButton
-            onClick={(event) =>
-              handleDeleteOneClick([params.id as string], event)
-            }
-          >
-            <Delete />
-          </IconButton>
-
+        <IconButton
+          onClick={(event) =>
+            handleDeleteOneClick([params.id as string], event)
+          }
+        >
+          <Delete />
+        </IconButton>
       ),
     },
   ];

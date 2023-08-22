@@ -161,6 +161,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
     setEmailEntered(!!event.target.value);
   };
 
+  //Reseting the password
   const handlePasswordRecoverySubmit = async () => {
     setShowSnackbarReset(true);
     try {
@@ -182,6 +183,9 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   const handlePasswordResetSubmit = async () => {
     setShowResetDialog(false);
   };
+
+  //Sending OTP for forget password
+  
   const handleChangePassword = async () => {
     setLoading(true);
     const response = await forgotPasswordMutation({
@@ -198,6 +202,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
     }
   };
 
+  //Log in
   const handleFormSubmit = async (data: FormData) => {
     setLoading(true);
 
@@ -206,7 +211,6 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
         email: data.username,
         password: data.password,
       });
-      console.log(response);
 
 
       if ("data" in response) {
@@ -266,7 +270,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
         <LoginContainer>
           <Snackbar
             open={showSnackbarReset}
-            // autoHideDuration={2000}
+            autoHideDuration={2000}
             onClose={handleSnackbarClose}
           >
             <MuiAlertReset onClose={handleSnackbarClose} variant="filled">
@@ -274,6 +278,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
             </MuiAlertReset>
           </Snackbar>
           <LoginText>Login</LoginText>
+
           <form onSubmit={handleSubmit(handleFormSubmit)}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -487,10 +492,26 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  type="password"
+                  type={showPassword ? "text" : "password"}
+
                   label="New Password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton
+                        onClick={handleTogglePasswordVisibility}
+                        edge="end"
+                        aria-label="toggle password visibility"
+                      >
+                        {showPassword ? (
+                          <VisibilityIcon />
+                        ) : (
+                          <VisibilityOffIcon />
+                        )}
+                      </IconButton>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>

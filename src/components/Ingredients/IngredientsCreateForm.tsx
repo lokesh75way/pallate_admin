@@ -1,4 +1,4 @@
-import React, { useCallback, useState ,useEffect} from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
@@ -16,7 +16,6 @@ import { makeStyles } from "@mui/styles";
 import { UserData } from "../../models/UserModel";
 import { usersApi } from "../../services/userApi";
 
-
 import {
   Button,
   Box,
@@ -33,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
   container: {
     marginTop: "70px",
     marginLeft: "100px",
-    padding:'20px',
+    padding: "20px",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -69,7 +68,7 @@ const useStyles = makeStyles((theme) => ({
       color: "white !important",
     },
   },
-  
+
   boxItem: {
     display: "flex",
     justifyContent: "space-between",
@@ -119,6 +118,8 @@ const IngredientsCreateForm: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [isLoading, setIsLoading] = useState(false);
+  const [uploaded, IsUploaded] = useState(false);
+
 
   const {
     handleSubmit,
@@ -134,32 +135,38 @@ const IngredientsCreateForm: React.FC = () => {
   const onSubmit = async (data: FormValues) => {
     try {
       const formData = new FormData();
-
+  
       formData.append("name", data.name);
       formData.append("quantity", data.quantity.toString());
       formData.append("expiry", data.expiry);
       formData.append("type", data.type);
       formData.append("price", data.price.toString());
       formData.append("image", data.image as File);
-
-      await createIngredient(formData);
-      setIsSnackbarOpen(true);
-      console.log(formData);
-      navigate("/ingredients");
-
-      reset({
-        ...data,
-        name: "",
-        quantity: 0,
-        expiry: new Date().toISOString().slice(0, 10),
-        type: "",
-        price: 0,
-        // image: null,
-      });
+  
+      // Check if the form has any errors
+      if (Object.keys(errors).length === 0) {
+        await createIngredient(formData);
+        setIsSnackbarOpen(true);
+  
+        navigate("/ingredients");
+  
+        reset({
+          ...data,
+          name: "",
+          quantity: 0,
+          expiry: new Date().toISOString().slice(0, 10),
+          type: "",
+          price: 0,
+          // image: null,
+        });
+      } else {
+        console.log("Form has errors, cannot submit.");
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
     }
   };
+  
 
   const handleDragEnter = useCallback(() => {
     setIsDragging(true);
@@ -167,23 +174,23 @@ const IngredientsCreateForm: React.FC = () => {
 
   const loadOptions = async (inputValue: string) => {
     try {
-      const userResponse:userApiResponse = data as userApiResponse;
+      const userResponse: userApiResponse = data as userApiResponse;
       const filteredUsers = userResponse.data.users.filter((user) =>
         user.name.toLowerCase().includes(inputValue.toLowerCase())
       );
       return filteredUsers.map((user) => ({
-        lable:user._id,
+        lable: user._id,
         label: user.name,
       }));
     } catch (error) {
       console.error("Error loading users:", error);
       return [];
     }
-  };  
+  };
   useEffect(() => {
     loadOptions("");
   }, []);
-  
+
   const handleDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles && acceptedFiles.length > 0) {
@@ -192,7 +199,7 @@ const IngredientsCreateForm: React.FC = () => {
 
         if (selectedFile.type.startsWith("image/")) {
           const reader = new FileReader();
-
+          IsUploaded(true);
           reader.onload = (e: ProgressEvent<FileReader>) => {
             const image = new Image();
             image.src = e.target!.result as string;
@@ -242,39 +249,39 @@ const IngredientsCreateForm: React.FC = () => {
   return (
     <div>
       <div className={classes.container}>
-      <Controller
+        <Controller
           name="user"
           control={control}
           rules={{ required: "User is required" }}
           render={({ field }) => (
             <>
-            <StyledAsyncSelect
-              {...field}
-              cacheOptions
-              defaultOptions
-              loadOptions={loadOptions}
-              placeholder="User"
-              className={classes.users}
-              styles={{
-                control: (provided, state) => ({
-                  ...provided,
-                  borderColor: state.isFocused ? "#002D62" : "grey", 
-                  "&:hover": {
+              <StyledAsyncSelect
+                {...field}
+                cacheOptions
+                defaultOptions
+                loadOptions={loadOptions}
+                placeholder="User"
+                className={classes.users}
+                styles={{
+                  control: (provided, state) => ({
+                    ...provided,
                     borderColor: state.isFocused ? "#002D62" : "grey",
-                  },
-                }),
-                option: (provided, state) => ({
-                  ...provided,
-                         
-                  backgroundColor: state.isSelected ? "white" : "white",
-                  color:'black'
-                }),
-              }}
+                    "&:hover": {
+                      borderColor: state.isFocused ? "#002D62" : "grey",
+                    },
+                  }),
+                  option: (provided, state) => ({
+                    ...provided,
+
+                    backgroundColor: state.isSelected ? "white" : "white",
+                    color: "black",
+                  }),
+                }}
               />
               {errors.user && (
                 <span style={{ color: "red" }}>{errors.user.message}</span>
               )}
-               </>
+            </>
           )}
         />
 
@@ -369,7 +376,6 @@ const IngredientsCreateForm: React.FC = () => {
               inputProps={{
                 min: new Date().toISOString().slice(0, 10),
               }}
-             
             />
           )}
         />
@@ -408,11 +414,17 @@ const IngredientsCreateForm: React.FC = () => {
                   <Button
                     startIcon={<AddAPhotoIcon />}
                     className={classes.button}
+                    disabled={uploaded}
                   >
-                    Upload or Drag Pictures
+                    {uploaded ? "Add a new Picture" : "Upload or Drag Pictures"}
                   </Button>
                 )}
               </div>
+              {!uploaded && errors.image && (
+                <span style={{ color: "red", marginLeft: "60px" }}>
+                  {errors.image.message}
+                </span>
+              )}
             </section>
           )}
         />
@@ -454,7 +466,6 @@ const IngredientsCreateForm: React.FC = () => {
             onClick={handleSubmit(onSubmit)}
             startIcon={<SaveIcon />}
           >
-            
             Save
           </Button>
 
