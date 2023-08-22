@@ -13,7 +13,7 @@ import { useCreateIngredientMutation } from "../../services/userApi";
 import { userOptions } from "./data";
 import { useDropzone } from "react-dropzone";
 import { makeStyles } from "@mui/styles";
-import InputAdornment from "@mui/material/InputAdornment";
+
 import { UserData } from "../../models/UserModel";
 import { usersApi } from "../../services/userApi";
 

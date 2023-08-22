@@ -72,6 +72,7 @@ const Header: React.FC = () => {
     setShowLogoutConfirmation(false);
     if (confirmed) {
       localStorage.setItem(LOGIN_STATUS_KEY, "false");
+      localStorage.removeItem('authToken');
       setShowLoginPopup(true);
     }
     navigate("/")

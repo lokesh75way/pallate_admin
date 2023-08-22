@@ -7,11 +7,13 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CloseIcon from "@mui/icons-material/Close";
 import { useLoginMutation } from "../services/userApi";
 import MuiAlert from "@mui/material/Alert";
+import { useDispatch } from 'react-redux';
+import { increment } from '../store/authReducer';
 
 import {
   useForgotPasswordMutation,
   useResetPasswordMutation,
-} from "../services/userApi"; 
+} from "../services/userApi";
 
 import {
   Dialog,
@@ -94,6 +96,16 @@ const MuiAlertUser = styled(MuiAlert)({
   marginLeft: "550px",
   marginTop: "-750px",
 });
+interface CustomResponse {
+  data: {
+    data: {
+      token: string;
+    };
+  };
+}
+interface ApiResponse {
+  token: string;
+}
 
 interface LoginProps {
   showPopup: boolean;
@@ -126,6 +138,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   const [receivedOtp, setReceivedOtp] = useState<number>(0);
   const [newPassword, setNewPassword] = useState("");
   const [emailEntered, setEmailEntered] = useState(false);
+  const dispatch = useDispatch();
 
   // Mutations
   const [resetPassword, { isLoading, isError }] = useResetPasswordMutation();
@@ -193,9 +206,15 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
         email: data.username,
         password: data.password,
       });
+      console.log(response);
 
 
       if ("data" in response) {
+        const userToken:CustomResponse = response.data as unknown as CustomResponse;
+        const tokenVal:ApiResponse = userToken.data as unknown as ApiResponse;
+        dispatch(increment(tokenVal.token));
+        localStorage.setItem("authToken", tokenVal.token);
+
         setLoading(false);
         setIsLoggedIn(true);
         onLoginSuccess();
@@ -338,12 +357,12 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
       {/* Forget password  */}
       <Dialog open={showRecoveryDialog} onClose={handleCloseRecoveryDialog}>
         <ResetContainer>
-            <DialogTitle
+          <DialogTitle
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              position: "relative", 
+              position: "relative",
             }}
           >
             <IconButton
@@ -351,7 +370,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
               color="inherit"
               aria-label="close"
               onClick={handleCloseRecoveryDialog}
-              style={{ position: "absolute", right: 0, top: 0 }} 
+              style={{ position: "absolute", right: 0, top: 0 }}
             >
               <CloseIcon />
             </IconButton>
@@ -430,7 +449,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              position: "relative", 
+              position: "relative",
             }}
           >
             <IconButton
@@ -438,12 +457,12 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
               color="inherit"
               aria-label="close"
               onClick={handleCloseRecoveryDialog}
-              style={{ position: "absolute", right: 0, top: 10 }} 
+              style={{ position: "absolute", right: 0, top: 10 }}
             >
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-            <LoginText>Forgot Password</LoginText>
+          <LoginText>Forgot Password</LoginText>
 
           <form onSubmit={handlePasswordRecoverySubmit}>
             <Grid container spacing={2}>
@@ -454,7 +473,6 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                   label="Enter OTP"
                   value={receivedOtp || ""}
                   onChange={(e) => setReceivedOtp(Number(e.target.value))}
-                  
                 />
               </Grid>
               <Grid item xs={12}>
