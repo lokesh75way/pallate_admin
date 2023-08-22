@@ -193,7 +193,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
         email: data.username,
         password: data.password,
       });
-      console.log(response);
+
 
       if ("data" in response) {
         setLoading(false);

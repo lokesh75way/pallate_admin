@@ -130,9 +130,6 @@ const IngredientsCreateForm: React.FC = () => {
   } = useForm<FormValues>();
 
   const { data } = usersApi.endpoints.getUsers.useQuery();
-
-
-
   const [createIngredient] = useCreateIngredientMutation();
 
   const onSubmit = async (data: FormValues) => {
@@ -169,16 +166,9 @@ const IngredientsCreateForm: React.FC = () => {
     setIsDragging(true);
   }, []);
 
-  const filterColors = (inputValue: string) => {
-    return userOptions.filter((i) =>
-      i.label.toLowerCase().includes(inputValue.toLowerCase())
-    );
-  };
   const loadOptions = async (inputValue: string) => {
     try {
-
       const userResponse:userApiResponse = data as userApiResponse;
-  
       const filteredUsers = userResponse.data.users.filter((user) =>
         user.name.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -263,7 +253,21 @@ const IngredientsCreateForm: React.FC = () => {
               loadOptions={loadOptions}
               placeholder="User"
               className={classes.users}
-
+              styles={{
+                control: (provided, state) => ({
+                  ...provided,
+                  borderColor: state.isFocused ? "#002D62" : "grey", 
+                  "&:hover": {
+                    borderColor: state.isFocused ? "#002D62" : "grey",
+                  },
+                }),
+                option: (provided, state) => ({
+                  ...provided,
+                         
+                  backgroundColor: state.isSelected ? "white" : "white",
+                  color:'black'
+                }),
+              }}
             />
           )}
         />

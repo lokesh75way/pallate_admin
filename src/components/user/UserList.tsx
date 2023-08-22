@@ -5,7 +5,7 @@ import { Typography } from "@mui/material";
 import styled from "@emotion/styled";
 
 import { usersApi } from "../../services/userApi";
-import { Button, Box, IconButton, CircularProgress } from "@mui/material";
+import { IconButton, CircularProgress } from "@mui/material";
 import { Delete } from "@mui/icons-material";
 
 import { UserData } from "../../models/UserModel";
@@ -65,8 +65,7 @@ const UserList: React.FC = () => {
     
       fetchData();
     
-    
-  }, [data, isLoading, error]);
+  }, []);
 const handleDeleteOneClick = async (id: string[], event: any) => {
   }
 
@@ -109,7 +108,7 @@ const handleDeleteOneClick = async (id: string[], event: any) => {
           borderRadius: "8px",
         }}
       >
-        {isLoading ? (
+        {loading ? (
           <LoadingComponent />
         ) : (
           <DataGrid
