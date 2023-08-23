@@ -53,7 +53,7 @@ const Header: React.FC = () => {
       <StyledAppBar position="fixed">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Pallate
+            Pallate Admin
           </Typography>
 
           <Avatar
