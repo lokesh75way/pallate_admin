@@ -1,32 +1,29 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { styled } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import AsyncSelect from "react-select/async";
-import AddIcon from "@mui/icons-material/Add";
-import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import SaveIcon from "@mui/icons-material/Save";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
-import { useTheme } from "@mui/material/styles";
-import { useCreateIngredientMutation } from "../../services/userApi";
-import { useDropzone } from "react-dropzone";
 import { makeStyles } from "@mui/styles";
-
-import { UserData } from "../../models/UserModel";
-import { usersApi } from "../../services/userApi";
-
 import {
   Button,
-  Box,
   TextField,
-  Select,
   MenuItem,
   FormControl,
-  InputLabel,
   FormHelperText,
+  Typography,
+  Grid,
+  InputAdornment,
+  Divider,
   CircularProgress,
 } from "@mui/material";
+import { useGetUsersQuery } from "../../store/slices/userSlice";
+import {
+  useCreateIngredientsMutation,
+  useUploadImageMutation,
+} from "../../store/slices/ingredientSlice";
+import { useDispatch } from "react-redux";
+import { openAlert } from "../../store/slices/alertSlice";
+import cameraIcon from "../../assets/camera.svg";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -40,6 +37,18 @@ const useStyles = makeStyles((theme) => ({
     gap: "20px",
     "& .MuiTextField-root, & .MuiFormControl-root": {
       width: "50%",
+    },
+  },
+
+  imageInput: {
+    "&::after": {
+      content: "",
+      backgroundColor: "black",
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      right: 0,
+      left: 0,
     },
   },
 
@@ -94,33 +103,25 @@ const StyledAsyncSelect = styled(AsyncSelect)({
   width: "50%",
 });
 
-interface userApiResponse {
-  data: {
-    users: UserData[];
-  };
-}
 interface FormValues {
-  user: string;
+  user: {
+    id: string;
+    label: string;
+  };
   name: string;
   quantity: number;
   expiry: string;
   type: string;
   price: number;
-  image: File;
+  image: string;
 }
 
 const IngredientsCreateForm: React.FC = () => {
   const classes = useStyles();
-  const [isDragging, setIsDragging] = useState(false);
-  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
-  const [isSnackbarOpenFile, setIsSnackbarOpenFile] = useState(false);
-
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
-  const [uploaded, IsUploaded] = useState(false);
-
-
+  const [showImgErr, setShowImgErr] = useState(false);
+  const ref = useRef<any>(null);
+  const [photoURL, setPhotoURL] = useState("");
+  const dispatch = useDispatch();
   const {
     handleSubmit,
     control,
@@ -129,27 +130,39 @@ const IngredientsCreateForm: React.FC = () => {
     setValue,
   } = useForm<FormValues>();
 
-  const { data } = usersApi.endpoints.getUsers.useQuery();
-  const [createIngredient] = useCreateIngredientMutation();
+  const { data: users } = useGetUsersQuery();
+  const [createIngredient, { isLoading: ingredientCreating }] =
+    useCreateIngredientsMutation();
+  const [uploadImage, { isLoading: imageUploading }] = useUploadImageMutation();
+
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const image = e.target.files[0];
+      setShowImgErr(false);
+      try {
+        const formData = new FormData();
+        formData.append("image", image as File);
+        const url = await uploadImage(formData).unwrap();
+        setPhotoURL(url);
+        setValue("image", url);
+      } catch (err) {
+        const error = err as ErrorResponse;
+        const message = error?.message ?? "Something went wrong";
+        dispatch(openAlert({ message, varient: "error" }));
+      }
+    }
+  };
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const formData = new FormData();
-  
-      formData.append("name", data.name);
-      formData.append("quantity", data.quantity.toString());
-      formData.append("expiry", data.expiry);
-      formData.append("type", data.type);
-      formData.append("price", data.price.toString());
-      formData.append("image", data.image as File);
-  
-      // Check if the form has any errors
-      if (Object.keys(errors).length === 0) {
-        await createIngredient(formData);
-        setIsSnackbarOpen(true);
-  
-        navigate("/ingredients");
-  
+      const {
+        user: { id: userId },
+        image,
+        ...formData
+      } = data;
+
+      if (image) {
+        await createIngredient({ user: userId, image, ...formData }).unwrap();
         reset({
           ...data,
           name: "",
@@ -157,326 +170,312 @@ const IngredientsCreateForm: React.FC = () => {
           expiry: new Date().toISOString().slice(0, 10),
           type: "",
           price: 0,
-          // image: null,
+          image: "",
+          user: { id: "", label: "" },
         });
+        setPhotoURL("");
+        dispatch(
+          openAlert({
+            message: "Ingredient created successfully",
+            varient: "success",
+          })
+        );
       } else {
-        console.log("Form has errors, cannot submit.");
+        setShowImgErr(true);
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch (err) {
+      const error = err as ErrorResponse;
+      const message =
+        error?.message === "Validation error!"
+          ? error.data?.errors[0].msg ?? "Something went wrong"
+          : error?.message ?? "Something went wrong";
+      dispatch(openAlert({ message, varient: "error" }));
     }
   };
-  
-
-  const handleDragEnter = useCallback(() => {
-    setIsDragging(true);
-  }, []);
 
   const loadOptions = async (inputValue: string) => {
-    try {
-      const userResponse: userApiResponse = data as userApiResponse;
-      const filteredUsers = userResponse.data.users.filter((user) =>
+    return (users || [])
+      .filter((user) =>
         user.name.toLowerCase().includes(inputValue.toLowerCase())
-      );
-      return filteredUsers.map((user) => ({
-        lable: user._id,
-        label: user.name,
+      )
+      .map((user) => ({
+        id: user?._id,
+        label: user?.name,
       }));
-    } catch (error) {
-      console.error("Error loading users:", error);
-      return [];
-    }
   };
-  useEffect(() => {
-    loadOptions("");
-  }, []);
-
-  const handleDrop = useCallback(
-    async (acceptedFiles: File[]) => {
-      if (acceptedFiles && acceptedFiles.length > 0) {
-        const selectedFile = acceptedFiles[0];
-        // console.log("Selected file:", selectedFile);
-
-        if (selectedFile.type.startsWith("image/")) {
-          const reader = new FileReader();
-          IsUploaded(true);
-          reader.onload = (e: ProgressEvent<FileReader>) => {
-            const image = new Image();
-            image.src = e.target!.result as string;
-
-            image.onload = () => {
-              if (image.width > 0 && image.height > 0) {
-                setValue("image", selectedFile);
-                setIsLoading(true);
-
-                try {
-                  setTimeout(() => {
-                    setIsLoading(false);
-                    setIsSnackbarOpen(true);
-                  }, 2000);
-                } catch (error) {
-                  console.error("Error uploading image:", error);
-                  setIsLoading(false);
-                }
-              } else {
-                console.log("Selected file is not a valid image.");
-              }
-            };
-          };
-
-          reader.readAsDataURL(selectedFile);
-        } else if (selectedFile.type.startsWith("video/")) {
-          setIsSnackbarOpenFile(true);
-        } else {
-          setIsSnackbarOpenFile(true);
-        }
-      }
-    },
-    [setValue]
-  );
-
-  const handleCloseSnackbar = () => {
-    setIsSnackbarOpen(false);
-    setIsSnackbarOpenFile(false);
-  };
-
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop: handleDrop,
-    onDragEnter: handleDragEnter,
-    onDragLeave: () => setIsDragging(false),
-  });
 
   return (
-    <div>
-      <div className={classes.container}>
-        <Controller
-          name="user"
-          control={control}
-          rules={{ required: "User is required" }}
-          render={({ field }) => (
-            <>
-              <StyledAsyncSelect
-                {...field}
-                cacheOptions
-                defaultOptions
-                loadOptions={loadOptions}
-                placeholder="User"
-                className={classes.users}
-                styles={{
-                  control: (provided, state) => ({
-                    ...provided,
-                    borderColor: state.isFocused ? "#002D62" : "grey",
-                    "&:hover": {
-                      borderColor: state.isFocused ? "#002D62" : "grey",
-                    },
-                  }),
-                  option: (provided, state) => ({
-                    ...provided,
-
-                    backgroundColor: state.isSelected ? "white" : "white",
-                    color: "black",
-                  }),
-                }}
-              />
-              {errors.user && (
-                <span style={{ color: "red" }}>{errors.user.message}</span>
-              )}
-            </>
-          )}
-        />
-
-        <Controller
-          name="name"
-          control={control}
-          defaultValue=""
-          rules={{ required: "Name is required" }}
-          render={({ field }) => (
-            <TextField
-              label="Name"
-              {...field}
-              error={!!errors.name}
-              helperText={errors.name?.message}
-            />
-          )}
-        />
-
-        <Controller
-          name="quantity"
-          control={control}
-          rules={{
-            required: "Quantity is required",
-            min: {
-              value: 0,
-              message: "Quantity must be greater than or equal to 0",
-            },
+    <div style={{ marginLeft: "250px", marginTop: "70px" }}>
+      <div>
+        <Typography
+          sx={{
+            margin: "10px",
+            fontSize: 30,
           }}
-          render={({ field }) => (
-            <TextField
-              label="Quantity"
-              type="number"
-              {...field}
-              error={!!errors.quantity}
-              helperText={errors.quantity?.message}
-            />
-          )}
-        />
+        >
+          Create Ingredients
+        </Typography>
+      </div>
+      <Divider />
+      <div style={{ minHeight: "80vh", marginTop: "30px" }}>
+        <Grid container spacing={1}>
+          <Grid
+            container
+            xs={12}
+            md={9}
+            spacing={2}
+            sx={{ marginBottom: "10px", marginRight: "10px" }}
+          >
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="user"
+                control={control}
+                rules={{ required: "User is required" }}
+                render={({ field }) => (
+                  <>
+                    <StyledAsyncSelect
+                      {...field}
+                      cacheOptions
+                      defaultOptions
+                      loadOptions={loadOptions}
+                      placeholder="User"
+                      className={classes.users}
+                      styles={{
+                        control: (provided, state) => ({
+                          ...provided,
+                          borderColor: state.isFocused ? "#002D62" : "grey",
+                          "&:hover": {
+                            borderColor: state.isFocused ? "#002D62" : "grey",
+                          },
+                        }),
+                        option: (provided, state) => ({
+                          ...provided,
 
-        <Controller
-          name="type"
-          control={control}
-          defaultValue=""
-          rules={{ required: "Unit is required" }}
-          render={({ field }) => (
-            <FormControl error={!!errors.type} className={classes.formControl}>
-              <InputLabel
-                htmlFor="type"
-                className={`${classes.inputLabel}
-        }`}
-              >
-                Unit
-              </InputLabel>
-              <Select {...field}>
-                <MenuItem value="KG">KG</MenuItem>
-                <MenuItem value="G">GM</MenuItem>
-                <MenuItem value="L">LT</MenuItem>
-                <MenuItem value="ML">ML</MenuItem>
-                <MenuItem value="COUNT">COUNT</MenuItem>
-              </Select>
-              <FormHelperText>{errors.type?.message}</FormHelperText>
-            </FormControl>
-          )}
-        />
-        <Controller
-          name="price"
-          control={control}
-          // defaultValue={0}
-          rules={{ required: "Price is required" }}
-          render={({ field }) => (
-            <TextField
-              label="Price"
-              type="price"
-              {...field}
-              error={!!errors.price}
-              helperText={errors.price?.message}
-            />
-          )}
-        />
-        <Controller
-          name="expiry"
-          control={control}
-          defaultValue={new Date().toISOString().slice(0, 10)}
-          rules={{ required: "Date is required" }}
-          render={({ field }) => (
-            <TextField
-              label="Expiry"
-              type="date"
-              {...field}
-              error={!!errors.expiry}
-              helperText={errors.expiry?.message}
-              inputProps={{
-                min: new Date().toISOString().slice(0, 10),
-              }}
-            />
-          )}
-        />
-        <Controller
-          name="image"
-          control={control}
-          rules={{ required: "Picture is required" }}
-          render={() => (
-            <section>
-              <div
-                {...getRootProps()}
-                style={{
-                  border: isDragging
-                    ? "2px dashed #002D62"
-                    : "2px solid transparent",
-                  padding: "7px",
-                  borderRadius: "4px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                          backgroundColor: state.isSelected ? "white" : "white",
+                          color: "black",
+                        }),
+                      }}
+                    />
+                    {errors.user && (
+                      <span style={{ color: "red" }}>
+                        {errors.user.message}
+                      </span>
+                    )}
+                  </>
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="name"
+                control={control}
+                defaultValue=""
+                rules={{ required: "Name is required" }}
+                render={({ field }) => (
+                  <TextField
+                    fullWidth
+                    size="medium"
+                    label="Name"
+                    {...field}
+                    error={!!errors.name}
+                    helperText={errors.name?.message}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="quantity"
+                control={control}
+                rules={{
+                  required: "Quantity is required",
+                  min: {
+                    value: 0,
+                    message: "Quantity must be greater than or equal to 0",
+                  },
                 }}
-              >
-                <input {...getInputProps()} />
-                {isLoading ? (
+                render={({ field }) => (
+                  <TextField
+                    fullWidth
+                    size="medium"
+                    label="Quantity"
+                    type="number"
+                    {...field}
+                    error={!!errors.quantity}
+                    helperText={errors.quantity?.message}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="type"
+                control={control}
+                defaultValue=""
+                rules={{ required: "Unit is required" }}
+                render={({ field }) => (
+                  <FormControl
+                    error={!!errors.type}
+                    className={classes.formControl}
+                  >
+                    <TextField
+                      id="outlined-select-currency"
+                      select
+                      label="Unit"
+                      defaultValue="KG"
+                      {...field}
+                      fullWidth
+                      size="medium"
+                    >
+                      <MenuItem value="KG">KG</MenuItem>
+                      <MenuItem value="G">GM</MenuItem>
+                      <MenuItem value="L">LT</MenuItem>
+                      <MenuItem value="ML">ML</MenuItem>
+                      <MenuItem value="COUNT">COUNT</MenuItem>
+                    </TextField>
+                    <FormHelperText>{errors.type?.message}</FormHelperText>
+                  </FormControl>
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="price"
+                control={control}
+                rules={{ required: "Price is required" }}
+                render={({ field }) => (
+                  <TextField
+                    fullWidth
+                    size="medium"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">$</InputAdornment>
+                      ),
+                    }}
+                    label="Price"
+                    type="price"
+                    {...field}
+                    error={!!errors.price}
+                    helperText={errors.price?.message}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="expiry"
+                control={control}
+                defaultValue={new Date().toISOString().slice(0, 10)}
+                rules={{ required: "Date is required" }}
+                render={({ field }) => (
+                  <TextField
+                    fullWidth
+                    size="medium"
+                    label="Expiry"
+                    type="date"
+                    {...field}
+                    error={!!errors.expiry}
+                    helperText={errors.expiry?.message}
+                    inputProps={{
+                      min: new Date().toISOString().slice(0, 10),
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+          </Grid>
+          <Grid container xs={12} md={3} spacing={2}>
+            <Grid item xs={12}>
+              <div>
+                <input
+                  type="file"
+                  name="image"
+                  ref={ref}
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleUploadImage}
+                  disabled={imageUploading}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (ref.current !== null) ref.current.click();
+                  }}
+                  style={{
+                    position: "relative",
+                    width: "200px",
+                    height: "180px",
+                    borderRadius: "8px",
+                    border: "2px",
+                    cursor: "pointer",
+                  }}
+                >
                   <div
+                    className={classes.imageInput}
                     style={{
+                      backgroundImage: `url('${photoURL || ""}')`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "center",
+                      backgroundSize: "cover",
+                      position: "relative",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "10px",
                       display: "flex",
-                      alignItems: "center",
                       justifyContent: "center",
-                      height: "30px",
+                      alignItems: "center",
                     }}
                   >
-                    <CircularProgress />
+                    <img
+                      src={cameraIcon}
+                      alt=""
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        bottom: 0,
+                        margin: "auto",
+                        left: 0,
+                        right: 0,
+                      }}
+                    />
                   </div>
-                ) : (
-                  <Button
-                    startIcon={<AddAPhotoIcon />}
-                    className={classes.button}
-                    disabled={uploaded}
-                  >
-                    {uploaded ? "Add a new Picture" : "Upload or Drag Pictures"}
-                  </Button>
-                )}
-              </div>
-              {!uploaded && errors.image && (
-                <span style={{ color: "red", marginLeft: "60px" }}>
-                  {errors.image.message}
+                </button>
+                <span
+                  style={{
+                    color: `${showImgErr ? "red" : "black"}`,
+                    marginLeft: "60px",
+                  }}
+                >
+                  Upload a Picture
                 </span>
+              </div>
+            </Grid>
+          </Grid>
+        </Grid>
+        <div
+          style={{
+            marginTop: "30px",
+            display: "flex",
+            justifyContent: "flex-start",
+          }}
+        >
+          <div>
+            <Button
+              size="large"
+              style={{ paddingLeft: "20px", paddingRight: "20px" }}
+              className={classes.button2}
+              onClick={handleSubmit(onSubmit)}
+              startIcon={<SaveIcon />}
+              disabled={ingredientCreating}
+            >
+              {ingredientCreating ? (
+                <CircularProgress sx={{ color: "white" }} size={24} />
+              ) : (
+                " Add Ingredien"
               )}
-            </section>
-          )}
-        />
-
-        <Snackbar
-          open={isSnackbarOpen}
-          autoHideDuration={1000}
-          onClose={handleCloseSnackbar}
-        >
-          <MuiAlert
-            className={classes.alert}
-            onClose={handleCloseSnackbar}
-            severity="success"
-            elevation={6}
-            variant="filled"
-          >
-            Picture added
-          </MuiAlert>
-        </Snackbar>
-        <Snackbar
-          open={isSnackbarOpenFile}
-          autoHideDuration={1000}
-          onClose={handleCloseSnackbar}
-        >
-          <MuiAlert
-            className={classes.alert}
-            onClose={handleCloseSnackbar}
-            severity="success"
-            elevation={6}
-            variant="filled"
-          >
-            Not an image
-          </MuiAlert>
-        </Snackbar>
-
-        <Box className={classes.boxItem}>
-          <Button
-            className={classes.button2}
-            onClick={handleSubmit(onSubmit)}
-            startIcon={<SaveIcon />}
-          >
-            Save
-          </Button>
-
-          <Button
-            className={classes.button1}
-            onClick={handleSubmit(onSubmit)}
-            startIcon={<AddIcon />}
-          >
-            Add Item
-          </Button>
-        </Box>
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

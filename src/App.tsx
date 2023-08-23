@@ -7,36 +7,37 @@ import IngredientsShow from "./components/Ingredients/IngredientsShow";
 import UserList from "./components/user/UserList";
 import UserShow from "./components/user/UserShow";
 import Layout from "./components/Layout";
+import SnackBar from "./components/SnackBar";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+
 function App() {
-  
   return (
     <>
-      <Router>  
+      <Router>
         <Layout>
-        <Routes>
-          <Route>
-            <Route path="/ingredients">
-              <Route path="" element={<IngredientsList />} />
-              <Route path="create" element={<IngredientsCreateForm />} />
-              <Route path=":id/show" element={<IngredientsShow />} />
-              <Route path="show" element={<IngredientsShow />} />
-              <Route
-                path=":ingredientId/editForm"
-                element={
-                  <IngredientsEditForm
-                    
-                  />
-                }
-              />
+          <Routes>
+            <Route>
+              <Route path="/ingredients">
+                <Route path="" element={<IngredientsList />} />
+                <Route path="create" element={<IngredientsCreateForm />} />
+                <Route path=":id/show" element={<IngredientsShow />} />
+                <Route path="show" element={<IngredientsShow />} />
+                <Route
+                  path=":ingredientId/editForm"
+                  element={<IngredientsEditForm />}
+                />
+              </Route>
             </Route>
-          </Route>
-          <Route>
-            <Route path="/user">
-              <Route path="" element={<UserList />} />
-              <Route path=":id/show" element={<UserShow />} />
+            <Route>
+              <Route path="/user">
+                <Route path="" element={<UserList />} />
+                <Route path=":id/show" element={<UserShow />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
+          </Routes>
+          <SnackBar />
         </Layout>
       </Router>
     </>

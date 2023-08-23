@@ -1,36 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
-import { Delete, Edit } from "@mui/icons-material";
-import { Button, Box, IconButton, CircularProgress } from "@mui/material";
-import { usersApi } from "../../services/userApi";
-import { useDeleteIngredientMutation } from "../../services/userApi";
+import { Delete, Edit, Visibility } from "@mui/icons-material";
+import {
+  Button,
+  Box,
+  IconButton,
+  CardHeader,
+  Avatar,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Divider,
+} from "@mui/material";
 import { IngredientData } from "../../models/IngredientModel";
-import { makeStyles } from "@mui/styles";
+import {
+  useGetIngredientsQuery,
+  useDeleteIngredientsMutation,
+} from "../../store/slices/ingredientSlice";
+import { useDispatch } from "react-redux";
+import { openAlert } from "../../store/slices/alertSlice";
+import LoadingComponent from "../Loading";
+import dayjs from "dayjs";
 
 const AddBox = styled(Box)({
   display: "flex",
   justifyContent: "flex-end",
-  marginTop: "55px",
-  marginRight: "50px",
   padding: "3px",
-});
-
-const StyledButtonCreate = styled(Button)({
-  marginTop: "5px",
-  color: "black",
-  "&:hover": {
-    color: "black",
-  },
-});
-const useStyles = makeStyles({
-  checkboxFocus: {
-    "& .MuiDataGrid-cell:focus-within ": {
-      outline: "none !important",
-    },
-  },
 });
 
 export interface ApiResponse {
@@ -39,79 +40,78 @@ export interface ApiResponse {
   };
 }
 
-const IngredientsList: React.FC = () => {
-  const [ingredients, setIngredients] = useState<IngredientData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+const IngredientsList = () => {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [deleteData, setDeleteData] = useState<string[]>();
   const navigate = useNavigate();
-  const classes = useStyles();
+  const [openDialog, setOpenDialog] = useState(false);
   const [isBulkDeleteVisible, setBulkDeleteVisible] = useState(false);
-  const [deleteActionCompleted, setDeleteActionCompleted] = useState(false);
-  const { data:userList } = usersApi.endpoints.getUsers.useQuery();
-
-  const { data, error, isLoading, refetch } =
-    usersApi.endpoints.getIngredients.useQuery();
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const refetchResult = await refetch(); 
-
-        const responseData: ApiResponse = refetchResult.data as ApiResponse;
-
-        if (responseData) {
-          setIngredients(responseData.data.ingredients);
-          setDeleteActionCompleted(false);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Error while fetching ingredient data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (error) {
-      console.error("Error while fetching ingredient data:", error);
-      setLoading(false);
-    } else {
-      fetchData();
-    }
-  }, []);
+  const dispatch = useDispatch();
+  const {
+    data: ingredients,
+    isLoading,
+    isError,
+    error,
+  } = useGetIngredientsQuery();
+  const [deleteIngredients, { isLoading: loadingDelete }] =
+    useDeleteIngredientsMutation();
 
   const columns: GridColDef[] = [
-    { field: "_id", headerName: "ID", width: 120 },
     {
       field: "name",
       headerName: "Name",
-      width: 120,
+      flex: 1,
       sortable: true,
-      renderHeader: (params) => {
-        return (
-          <div style={{ cursor: "pointer" }}>{params.colDef.headerName}</div>
-        );
-      },
+      renderHeader: (params) => (
+        <div style={{ cursor: "pointer" }}>{params.colDef.headerName}</div>
+      ),
+      renderCell: (params) => (
+        <CardHeader
+          avatar={
+            <Avatar alt={params.value.toUpperCase()} src={params.row.image} />
+          }
+          title={params.value}
+        />
+      ),
     },
-    { field: "quantity", headerName: "Quantity", width: 100, sortable: true },
-    { field: "type", headerName: "Unit", width: 100, sortable: true },
-    { field: "price", headerName: "Price", width: 100, sortable: true },
+    {
+      field: "user",
+      headerName: "User Assigned",
+      flex: 0.6,
+      sortable: true,
+      renderCell: (params) => params.value.name,
+    },
+    {
+      field: "quantity",
+      headerName: "Quantity",
+      flex: 0.3,
+      sortable: true,
+    },
+    {
+      field: "type",
+      headerName: "Unit",
+      flex: 0.2,
+      sortable: true,
+    },
+    {
+      field: "price",
+      headerName: "Price",
+      flex: 0.3,
+      sortable: true,
+      renderCell: (params) => `$${params.value}`,
+    },
     {
       field: "expiry",
       headerName: "Expiry",
-      width: 100,
+      flex: 0.5,
       sortable: true,
-
-      valueFormatter: (params) => {
-        const originalDateStr = params.value as string;
-        const formattedDate = originalDateStr.split("T")[0];
-        return formattedDate;
-      },
+      valueFormatter: (params) =>
+        dayjs(params.value).utc().format("MM-DD-YYYY"),
     },
-
-    { field: "image", headerName: "Picture", width: 200 },
     {
       field: "delete",
       headerName: "Actions",
-      width: 150,
+      flex: 0.5,
       sortable: false,
       renderCell: (params) => (
         <Box display="flex" alignItems="center" gap={2}>
@@ -121,47 +121,39 @@ const IngredientsList: React.FC = () => {
             <Edit />
           </IconButton>
           <IconButton
-            onClick={(event) =>
-              handleDeleteOneClick([params.id as string], event)
-            }
+            onClick={(event) => {
+              event.stopPropagation();
+              setDeleteData([params.id as string]);
+              setOpenDialog(true);
+            }}
           >
             <Delete />
+          </IconButton>
+          <IconButton onClick={(event) => handleOpenIngredient(params)}>
+            <Visibility />
           </IconButton>
         </Box>
       ),
     },
   ];
 
-  const handleDeleteClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    handleDeleteOneClick(selectedRows, event);
-    setSelectedRows([]);
-    setBulkDeleteVisible(false);
-  };
-
   const handleCreateClick = () => {
-
     navigate("/ingredients/create");
   };
-  const [deleteIngredientMutation] = useDeleteIngredientMutation();
 
-  const handleDeleteOneClick = async (
-    ingredientIds: string[],
-    clickEvent: React.MouseEvent
-  ) => {
-    clickEvent.stopPropagation();
-
+  const handleDeleteOneClick = async () => {
     try {
-      await deleteIngredientMutation(ingredientIds);
-      setDeleteActionCompleted(true);
+      const ingredientIds = deleteData;
+      const response = await deleteIngredients(ingredientIds).unwrap();
+      dispatch(openAlert({ message: response, varient: "success" }));
+    } catch (err) {
+      const error = err as ErrorResponse;
+      const message =
+        error?.message === "Validation error!"
+          ? error.data?.errors[0].msg ?? "Something went wrong"
+          : error?.message ?? "Something went wrong";
 
-      setIngredients((prevIngredients) =>
-        prevIngredients.filter(
-          (ingredient) => !ingredientIds.includes(ingredient._id)
-        )
-      );
-    } catch (error) {
-      console.error("Error while deleting ingredients:", error);
+      dispatch(openAlert({ message, varient: "error" }));
     }
   };
 
@@ -170,7 +162,6 @@ const IngredientsList: React.FC = () => {
     clickEvent: React.MouseEvent
   ) => {
     clickEvent.stopPropagation();
-    setLoading(true);
     navigate(`/ingredients/${ingredientId}/editForm`);
   };
 
@@ -179,58 +170,129 @@ const IngredientsList: React.FC = () => {
     setBulkDeleteVisible(selectionModel.length > 0);
   };
 
-  const handleRowClick = (params: any) => {
+  const handleOpenIngredient = (params: any) => {
     const ingredientId = params.id;
-    navigate(`/ingredients/${ingredientId}/show`);
+    navigate(`/ingredients/${ingredientId}`);
   };
 
-  return (
-    <div>
-      <AddBox>
-        {isBulkDeleteVisible && (
-          <IconButton onClick={handleDeleteClick}>
-            <Delete />
-          </IconButton>
-        )}
-        <StyledButtonCreate startIcon={<AddIcon />} onClick={handleCreateClick}>
-          Create
-        </StyledButtonCreate>
-      </AddBox>
+  if (isError) {
+    const err = error as ErrorResponse;
+    dispatch(
+      openAlert({
+        message: err?.message ?? "Something went wrong",
+        varient: "error",
+      })
+    );
+  }
 
+  return (
+    <div style={{ marginLeft: "250px", marginTop: "70px" }}>
       <div
-        className={classes.checkboxFocus}
         style={{
-          marginLeft: "230px",
-          marginTop: "0px",
-          height: "70%",
-          width: "82%",
-          boxShadow: "0px 2px 4px rgba(4, 4, 1, 0.4)",
-          borderRadius: "8px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
-        {loading ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100px",
-            }}
+        <Typography
+          sx={{
+            margin: "10px",
+            fontSize: 30,
+          }}
+        >
+          Ingredients
+        </Typography>
+
+        <AddBox>
+          {isBulkDeleteVisible && (
+            <Button
+              size="medium"
+              variant="contained"
+              sx={{ marginRight: "5px", height: "40px" }}
+              color="error"
+              startIcon={<Delete />}
+              onClick={(event) => {
+                event.stopPropagation();
+                setDeleteData(selectedRows);
+                setOpenDialog(true);
+              }}
+            >
+              Delete
+            </Button>
+          )}
+          <Button
+            size="medium"
+            variant="contained"
+            sx={{ bgcolor: "#002D62", height: "40px" }}
+            startIcon={<AddIcon />}
+            onClick={handleCreateClick}
           >
-            <CircularProgress />
-          </div>
+            Create
+          </Button>
+        </AddBox>
+      </div>
+      <Divider />
+      <div
+        style={{
+          borderRadius: "8px",
+          minHeight: "80vh",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          marginTop: "30px",
+        }}
+      >
+        {isLoading ? (
+          <LoadingComponent />
+        ) : isError ? (
+          <Typography>Can't fetch users</Typography>
         ) : (
           <DataGrid
             columns={columns}
-            rows={ingredients}
-            checkboxSelection
+            rows={ingredients || []}
             pagination
-            onRowClick={handleRowClick}
-            onRowSelectionModelChange={handleRowSelectionModelChange}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 25 } },
+            }}
             getRowId={(row) => row._id}
+            disableRowSelectionOnClick={true}
+            onRowSelectionModelChange={handleRowSelectionModelChange}
+            checkboxSelection
           />
         )}
       </div>
+
+      {/* Delete dialoge box */}
+      <Dialog
+        open={openDialog}
+        keepMounted
+        aria-describedby="alert-dialog-slide-description"
+      >
+        <DialogTitle>{"Are you sure?"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-slide-description">
+            Are you sure you want to delete ingredients
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setOpenDialog(false);
+            }}
+            disabled={loadingDelete}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={loadingDelete}
+            color="error"
+            onClick={handleDeleteOneClick}
+          >
+            {loadingDelete ? <LoadingComponent size={20} /> : "Yes!"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

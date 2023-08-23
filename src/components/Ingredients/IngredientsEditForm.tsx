@@ -14,8 +14,6 @@ import { useDropzone } from "react-dropzone";
 import { makeStyles } from "@mui/styles";
 import { userOptions } from "./data";
 import { useUpdateIngredientMutation } from "../../services/userApi";
-import { usersApi } from "../../services/userApi";
-import InputAdornment from "@mui/material/InputAdornment";
 
 import {
   Button,
@@ -28,6 +26,7 @@ import {
   FormHelperText,
   CircularProgress,
 } from "@mui/material";
+import { useGetIngredientQuery } from "../../store/slices/ingredientSlice";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -144,19 +143,23 @@ const IngredientsEditForm: React.FC = ({}) => {
     formState: { errors },
   } = useForm<FormValues>();
 
-  const { data,refetch } =
-    usersApi.endpoints.getIngredientById.useQuery(validIngredientId);
-  const ingredientData = data?.data.ingredient;
+  // const { data,refetch } =
+  //   usersApi.endpoints.getIngredientById.useQuery(validIngredientId);
+  const {
+    data: ingredientData,
+    // isLoading,
+    isError,
+    error,
+  } = useGetIngredientQuery(validIngredientId);
 
   const [updateIngredient] = useUpdateIngredientMutation();
 
   useEffect(() => {
-    refetch();
     if (ingredientData) {
       reset({
         name: ingredientData.name,
         quantity: ingredientData.quantity,
-        expiry: ingredientData.expiry.split("T")[0],
+        // expiry: new Date(ingredientData.expiry),
         type: ingredientData.type,
         image: ingredientData.image,
         price: ingredientData.price,
@@ -354,7 +357,6 @@ const IngredientsEditForm: React.FC = ({}) => {
               inputProps={{
                 min: new Date().toISOString().slice(0, 10),
               }}
-              
             />
           )}
         />

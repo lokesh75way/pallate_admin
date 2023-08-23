@@ -1,20 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { FormEvent, useState } from "react";
 import { styled } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useForm } from "react-hook-form";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CloseIcon from "@mui/icons-material/Close";
-import { useLoginMutation } from "../services/userApi";
-import MuiAlert from "@mui/material/Alert";
-import { useDispatch } from 'react-redux';
-import { loginToken } from '../store/authReducer';
-
-import {
-  useForgotPasswordMutation,
-  useResetPasswordMutation,
-} from "../services/userApi";
-
+import { useDispatch } from "react-redux";
 import {
   Dialog,
   DialogTitle,
@@ -23,13 +14,19 @@ import {
   TextField,
   CircularProgress,
   Grid,
-  Snackbar,
   AppBar,
   Toolbar,
   IconButton,
   Typography,
   Avatar,
 } from "@mui/material";
+import { userSignedIn } from "../store/slices/authSlice";
+import {
+  useForgotPasswordMutation,
+  useLoginMutation,
+  useResetPasswordMutation,
+} from "../store/slices/authApiSlice";
+import { openAlert } from "../store/slices/alertSlice";
 
 const LoginContainer = styled(DialogContent)({
   width: "400px",
@@ -66,46 +63,9 @@ const StyledButtonForget = styled(Button)({
   justifyContent: "center",
   alignItems: "center",
 });
-const StyledButtonReset = styled(Button)({
-  backgroundColor: "#002D62",
-
-  marginLeft: "110px",
-  color: "white",
-});
-const DialogBox = styled(Dialog)({
-  width: "80%",
-});
 const BlueCircularProgress = styled(CircularProgress)({
   color: "#002D62",
 });
-const MuiAlertOtp = styled(MuiAlert)({
-  backgroundColor: "#002D62",
-  color: "white",
-  zIndex: "1500",
-  marginLeft: "530px",
-  marginTop: "-900px",
-});
-const MuiAlertReset = styled(MuiAlert)({
-  backgroundColor: "#002D62",
-  color: "white",
-  zIndex: "1500",
-  marginLeft: "500px",
-  marginTop: "-900px",
-});
-const MuiAlertUser = styled(MuiAlert)({
-  marginLeft: "550px",
-  marginTop: "-750px",
-});
-interface CustomResponse {
-  data: {
-    data: {
-      token: string;
-    };
-  };
-}
-interface ApiResponse {
-  token: string;
-}
 
 interface LoginProps {
   showPopup: boolean;
@@ -124,12 +84,6 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
     formState: { errors },
   } = useForm<FormData>();
 
-  const [loading, setLoading] = useState(false);
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const [showSnackbarOtp, setShowSnackbarOtp] = useState(false);
-  const [showSnackbarReset, setShowSnackbarReset] = useState(false);
-  const [userNotFound, setUserNotFound] = useState(false);
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
@@ -141,9 +95,11 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   const dispatch = useDispatch();
 
   // Mutations
-  const [resetPassword, { isLoading, isError }] = useResetPasswordMutation();
-  const [forgotPasswordMutation] = useForgotPasswordMutation();
-  const [loginMutation] = useLoginMutation();
+  const [resetPassword, { isLoading: loadingReset }] =
+    useResetPasswordMutation();
+  const [forgotPasswordMutation, { isLoading: loadingForgot }] =
+    useForgotPasswordMutation();
+  const [loginMutation, { isLoading: loadingLogin }] = useLoginMutation();
 
   const handleOpenRecoveryDialog = () => {
     setShowRecoveryDialog(true);
@@ -162,81 +118,69 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   };
 
   //Reseting the password
-  const handlePasswordRecoverySubmit = async () => {
-    setShowSnackbarReset(true);
+  const handlePasswordRecoverySubmit = async (e: FormEvent) => {
+    e.preventDefault();
     try {
       const response = await resetPassword({
         otp: receivedOtp,
         email: recoveryEmail,
         password: newPassword,
-      });
+      }).unwrap();
 
+      dispatch(openAlert({ message: response, varient: "success" }));
       setShowResetDialog(false);
-    } catch (error) {
-      console.error("Error resetting password:", error);
-    }
-  };
-  const handleSnackbar = () => {
-    setShowSnackbarReset(true);
-  };
+    } catch (err) {
+      const error = err as ErrorResponse;
+      const message =
+        error?.message === "Validation error!"
+          ? error.data?.errors[0].msg ?? "Something went wrong"
+          : error?.message ?? "Something went wrong";
 
-  const handlePasswordResetSubmit = async () => {
-    setShowResetDialog(false);
+      dispatch(openAlert({ message, varient: "error" }));
+    }
   };
 
   //Sending OTP for forget password
-  
   const handleChangePassword = async () => {
-    setLoading(true);
-    const response = await forgotPasswordMutation({
-      email: recoveryEmail,
-    });
-    console.log(response);
-    setLoading(false);
+    try {
+      const response = await forgotPasswordMutation({
+        email: recoveryEmail,
+      }).unwrap();
 
-    if ("error" in response) {
-      setUserNotFound(true);
-    } else {
-      setShowSnackbarOtp(true);
+      dispatch(openAlert({ message: response, varient: "success" }));
       setShowResetDialog(true);
+    } catch (err) {
+      const error = err as ErrorResponse;
+      const message =
+        error?.message === "Validation error!"
+          ? error.data?.errors[0].msg ?? "Something went wrong"
+          : error?.message ?? "Something went wrong";
+
+      dispatch(openAlert({ message, varient: "error" }));
     }
   };
 
   //Log in
   const handleFormSubmit = async (data: FormData) => {
-    setLoading(true);
-
+    const { username, password } = data;
     try {
       const response = await loginMutation({
-        email: data.username,
-        password: data.password,
-      });
+        email: username,
+        password,
+      }).unwrap();
+      dispatch(userSignedIn({ token: response.token, user: response.user }));
+      localStorage.setItem("authToken", response.token);
+      setIsLoggedIn(true);
+      onLoginSuccess();
+    } catch (err) {
+      const error = err as ErrorResponse;
+      const message =
+        error?.message === "Validation error!"
+          ? error.data?.errors[0].msg ?? "Something went wrong"
+          : error?.message ?? "Something went wrong";
 
-
-      if ("data" in response) {
-        const userToken:CustomResponse = response.data as unknown as CustomResponse;
-        const tokenVal:ApiResponse = userToken.data as unknown as ApiResponse;
-        dispatch(loginToken(tokenVal.token));
-        localStorage.setItem("authToken", tokenVal.token);
-
-        setLoading(false);
-        setIsLoggedIn(true);
-        onLoginSuccess();
-      } else {
-        setLoading(false);
-        setShowSnackbar(true);
-      }
-    } catch (error) {
-      console.error("Error while logging in:", error);
-      setLoading(false);
-      setShowSnackbar(true);
+      dispatch(openAlert({ message, varient: "error" }));
     }
-  };
-  const handleSnackbarClose = () => {
-    setShowSnackbar(false);
-    setShowSnackbarOtp(false);
-    setShowSnackbarReset(false);
-    setUserNotFound(false);
   };
 
   if (isLoggedIn) {
@@ -268,17 +212,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
 
       <Dialog open={showPopup}>
         <LoginContainer>
-          <Snackbar
-            open={showSnackbarReset}
-            autoHideDuration={2000}
-            onClose={handleSnackbarClose}
-          >
-            <MuiAlertReset onClose={handleSnackbarClose} variant="filled">
-              Password reset successfully
-            </MuiAlertReset>
-          </Snackbar>
           <LoginText>Login</LoginText>
-
           <form onSubmit={handleSubmit(handleFormSubmit)}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -331,9 +265,9 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                   variant="contained"
                   color="primary"
                   type="submit"
-                  disabled={loading}
+                  disabled={loadingLogin}
                 >
-                  {loading ? (
+                  {loadingLogin ? (
                     <BlueCircularProgress size={24} color="secondary" />
                   ) : (
                     "Login"
@@ -346,21 +280,13 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                   Forgot Password
                 </StyledButtonForget>
               </Grid>
-              <Grid item xs={12}>
-                <Snackbar
-                  open={showSnackbar}
-                  autoHideDuration={3000}
-                  onClose={handleSnackbarClose}
-                  message={`${process.env.REACT_APP_AUTH_ERROR_MESSAGE}`}
-                />
-              </Grid>
             </Grid>
           </form>
         </LoginContainer>
       </Dialog>
 
       {/* Forget password  */}
-      <Dialog open={showRecoveryDialog} onClose={handleCloseRecoveryDialog}>
+      <Dialog open={showRecoveryDialog}>
         <ResetContainer>
           <DialogTitle
             style={{
@@ -381,7 +307,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
             </IconButton>
           </DialogTitle>
           <LoginText>Forgot Password</LoginText>
-          <form onSubmit={handlePasswordResetSubmit}>
+          <form>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
@@ -398,31 +324,16 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                   fullWidth
                   variant="contained"
                   color="primary"
-                  disabled={loading || !emailEntered}
+                  disabled={loadingForgot || !emailEntered}
                   onClick={handleChangePassword}
                 >
-                  {loading ? (
-                    <BlueCircularProgress size={24} color="secondary" />
+                  {loadingForgot ? (
+                    <BlueCircularProgress size={24} />
                   ) : (
                     "Send OTP"
                   )}
                 </StyledButton>
               </Grid>
-              {userNotFound && (
-                <Snackbar
-                  open={userNotFound}
-                  autoHideDuration={3000}
-                  onClose={handleSnackbarClose}
-                >
-                  <MuiAlertUser
-                    onClose={handleSnackbarClose}
-                    severity="error"
-                    variant="filled"
-                  >
-                    User not found!
-                  </MuiAlertUser>
-                </Snackbar>
-              )}
             </Grid>
           </form>
         </ResetContainer>
@@ -431,24 +342,6 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
       {/* Reset password */}
       <Dialog open={showResetDialog} onClose={handleCloseRecoveryDialog}>
         <LoginContainer>
-          <Snackbar
-            open={showSnackbarReset}
-            autoHideDuration={2000}
-            onClose={handleSnackbarClose}
-          >
-            <MuiAlertReset onClose={handleSnackbarClose} variant="filled">
-              Password reset successfully
-            </MuiAlertReset>
-          </Snackbar>
-          <Snackbar
-            open={showSnackbarOtp}
-            autoHideDuration={2000}
-            onClose={handleSnackbarClose}
-          >
-            <MuiAlertOtp onClose={handleSnackbarClose} variant="filled">
-              OTP sent successfully
-            </MuiAlertOtp>
-          </Snackbar>
           <DialogTitle
             style={{
               display: "flex",
@@ -467,9 +360,9 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-          <LoginText>Forgot Password</LoginText>
+          <LoginText>Reset Password</LoginText>
 
-          <form onSubmit={handlePasswordRecoverySubmit}>
+          <form>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
@@ -483,17 +376,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  type="email"
-                  label="Email Address"
-                  value={recoveryEmail}
-                  onChange={handleRecoveryEmailChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
                   type={showPassword ? "text" : "password"}
-
                   label="New Password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -515,13 +398,19 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <StyledButtonReset
+                <StyledButton
                   variant="contained"
+                  fullWidth
                   color="primary"
-                  type="submit"
+                  disabled={loadingReset || !receivedOtp || !newPassword}
+                  onClick={handlePasswordRecoverySubmit}
                 >
-                  Reset Password
-                </StyledButtonReset>
+                  {loadingReset ? (
+                    <BlueCircularProgress size={24} />
+                  ) : (
+                    "Reset Password"
+                  )}
+                </StyledButton>
               </Grid>
             </Grid>
           </form>
