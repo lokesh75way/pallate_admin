@@ -1,44 +1,42 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import IngredientsCreateForm from "./components/Ingredients/IngredientsCreateForm";
-import IngredientsEditForm from "./components/Ingredients/IngredientsEditForm";
+import CreateIngredient from "./components/Ingredients/CreateIngredient";
+import EditIngredient from "./components/Ingredients/EditIngredient";
 import IngredientsList from "./components/Ingredients/IngredientsList";
-import IngredientsShow from "./components/Ingredients/IngredientsShow";
 import UserList from "./components/user/UserList";
-import UserShow from "./components/user/UserShow";
+// import ViewUser from "./components/user/ViewUser";
 import Layout from "./components/Layout";
 import SnackBar from "./components/SnackBar";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import Authorization from "./components/Authorization";
+import Login from "./components/Login";
+import DashBoard from "./components/DashBoard";
 dayjs.extend(utc);
 
 function App() {
   return (
     <>
       <Router>
-        <Layout>
-          <Routes>
-            <Route>
+        <Routes>
+          <Route element={<Authorization />}>
+            <Route path="/" element={<Layout />}>
+              <Route path="" element={<DashBoard />} />
               <Route path="/ingredients">
                 <Route path="" element={<IngredientsList />} />
-                <Route path="create" element={<IngredientsCreateForm />} />
-                <Route path=":id/show" element={<IngredientsShow />} />
-                <Route path="show" element={<IngredientsShow />} />
-                <Route
-                  path=":ingredientId/editForm"
-                  element={<IngredientsEditForm />}
-                />
+                <Route path="create" element={<CreateIngredient />} />
+                <Route path="edit/:ingredientId" element={<EditIngredient />} />
               </Route>
-            </Route>
-            <Route>
-              <Route path="/user">
+              <Route path="/users">
                 <Route path="" element={<UserList />} />
-                <Route path=":id/show" element={<UserShow />} />
+                {/* <Route path=":id" element={<ViewUser />} /> */}
               </Route>
             </Route>
-          </Routes>
-          <SnackBar />
-        </Layout>
+          </Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="*" element={<div>Not found</div>} />
+        </Routes>
+        <SnackBar />
       </Router>
     </>
   );

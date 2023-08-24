@@ -1,6 +1,5 @@
 import React, { FormEvent, useState } from "react";
 import { styled } from "@mui/material/styles";
-import MenuIcon from "@mui/icons-material/Menu";
 import { useForm } from "react-hook-form";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -14,11 +13,7 @@ import {
   TextField,
   CircularProgress,
   Grid,
-  AppBar,
-  Toolbar,
   IconButton,
-  Typography,
-  Avatar,
 } from "@mui/material";
 import { userSignedIn } from "../store/slices/authSlice";
 import {
@@ -27,6 +22,8 @@ import {
   useResetPasswordMutation,
 } from "../store/slices/authApiSlice";
 import { openAlert } from "../store/slices/alertSlice";
+import { LOCAL_TOKEN } from "../util/constants";
+import { useLocation, useNavigate } from "react-router";
 
 const LoginContainer = styled(DialogContent)({
   width: "400px",
@@ -34,7 +31,7 @@ const LoginContainer = styled(DialogContent)({
   marginTop: "10px",
   padding: "20px",
   borderRadius: "8px",
-  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
 });
 const ResetContainer = styled(DialogContent)({
   width: "365px",
@@ -67,24 +64,18 @@ const BlueCircularProgress = styled(CircularProgress)({
   color: "#002D62",
 });
 
-interface LoginProps {
-  showPopup: boolean;
-  onLoginSuccess: () => void;
-}
-
 type FormData = {
   username: string;
   password: string;
 };
 
-const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
+const Login = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
@@ -93,6 +84,8 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
   const [newPassword, setNewPassword] = useState("");
   const [emailEntered, setEmailEntered] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Mutations
   const [resetPassword, { isLoading: loadingReset }] =
@@ -149,6 +142,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
 
       dispatch(openAlert({ message: response, varient: "success" }));
       setShowResetDialog(true);
+      setShowRecoveryDialog(false);
     } catch (err) {
       const error = err as ErrorResponse;
       const message =
@@ -169,9 +163,8 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
         password,
       }).unwrap();
       dispatch(userSignedIn({ token: response.token, user: response.user }));
-      localStorage.setItem("authToken", response.token);
-      setIsLoggedIn(true);
-      onLoginSuccess();
+      localStorage.setItem(LOCAL_TOKEN, response.token);
+      navigate(location.state?.from ?? "/");
     } catch (err) {
       const error = err as ErrorResponse;
       const message =
@@ -183,34 +176,20 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
     }
   };
 
-  if (isLoggedIn) {
-    return null;
-  }
   const handleTogglePasswordVisibility = () => {
     setShowPassword((prevShowPassword) => !prevShowPassword);
   };
 
   return (
-    <>
-      <AppBar position="fixed">
-        <Toolbar>
-          <IconButton edge="start" color="inherit" aria-label="menu">
-            <MenuIcon />
-          </IconButton>
-
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Pallete
-          </Typography>
-
-          <Avatar
-            alt="User Profile"
-            src="/path/to/profile-image.jpg"
-            sx={{ marginLeft: 2 }}
-          />
-        </Toolbar>
-      </AppBar>
-
-      <Dialog open={showPopup}>
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <div>
         <LoginContainer>
           <LoginText>Login</LoginText>
           <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -283,7 +262,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
             </Grid>
           </form>
         </LoginContainer>
-      </Dialog>
+      </div>
 
       {/* Forget password  */}
       <Dialog open={showRecoveryDialog}>
@@ -340,7 +319,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
       </Dialog>
 
       {/* Reset password */}
-      <Dialog open={showResetDialog} onClose={handleCloseRecoveryDialog}>
+      <Dialog open={showResetDialog}>
         <LoginContainer>
           <DialogTitle
             style={{
@@ -416,7 +395,7 @@ const Login: React.FC<LoginProps> = ({ showPopup, onLoginSuccess }) => {
           </form>
         </LoginContainer>
       </Dialog>
-    </>
+    </div>
   );
 };
 

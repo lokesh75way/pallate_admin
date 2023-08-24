@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   };
 
   const handleUserClick = () => {
-    navigate("/user");
+    navigate("/users");
     setSelectedItem("users");
   };
 

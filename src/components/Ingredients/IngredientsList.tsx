@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
@@ -17,8 +17,8 @@ import {
   DialogContentText,
   DialogActions,
   Divider,
+  Chip,
 } from "@mui/material";
-import { IngredientData } from "../../models/IngredientModel";
 import {
   useGetIngredientsQuery,
   useDeleteIngredientsMutation,
@@ -27,6 +27,8 @@ import { useDispatch } from "react-redux";
 import { openAlert } from "../../store/slices/alertSlice";
 import LoadingComponent from "../Loading";
 import dayjs from "dayjs";
+import { makeStyles } from "@mui/styles";
+import ViewIngredient from "./ViewIngredient";
 
 const AddBox = styled(Box)({
   display: "flex",
@@ -34,19 +36,32 @@ const AddBox = styled(Box)({
   padding: "3px",
 });
 
-export interface ApiResponse {
-  data: {
-    ingredients: IngredientData[];
-  };
-}
+const useStyles = makeStyles((theme) => ({
+  container: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  tableWrapper: {
+    borderRadius: "8px",
+    minHeight: "80vh",
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    marginTop: "30px",
+  },
+}));
 
 const IngredientsList = () => {
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<string[]>();
   const [deleteData, setDeleteData] = useState<string[]>();
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [isBulkDeleteVisible, setBulkDeleteVisible] = useState(false);
   const dispatch = useDispatch();
+  const classes = useStyles();
+  const [viewIngredient, setViewIngredient] = useState({ id: "", open: false });
   const {
     data: ingredients,
     isLoading,
@@ -79,7 +94,19 @@ const IngredientsList = () => {
       headerName: "User Assigned",
       flex: 0.6,
       sortable: true,
-      renderCell: (params) => params.value.name,
+      renderCell: (params) => (
+        <>
+          {params.value.name}
+          {!params.value.active && (
+            <Chip
+              size="small"
+              sx={{ marginLeft: "5px" }}
+              label="Deleted"
+              color="error"
+            />
+          )}
+        </>
+      ),
     },
     {
       field: "quantity",
@@ -143,8 +170,9 @@ const IngredientsList = () => {
 
   const handleDeleteOneClick = async () => {
     try {
-      const ingredientIds = deleteData;
-      const response = await deleteIngredients(ingredientIds).unwrap();
+      const ingredientId = deleteData;
+      const response = await deleteIngredients({ ingredientId }).unwrap();
+      setOpenDialog(false);
       dispatch(openAlert({ message: response, varient: "success" }));
     } catch (err) {
       const error = err as ErrorResponse;
@@ -162,7 +190,7 @@ const IngredientsList = () => {
     clickEvent: React.MouseEvent
   ) => {
     clickEvent.stopPropagation();
-    navigate(`/ingredients/${ingredientId}/editForm`);
+    navigate(`/ingredients/edit/${ingredientId}`);
   };
 
   const handleRowSelectionModelChange = (selectionModel: any) => {
@@ -172,28 +200,25 @@ const IngredientsList = () => {
 
   const handleOpenIngredient = (params: any) => {
     const ingredientId = params.id;
-    navigate(`/ingredients/${ingredientId}`);
+    setViewIngredient({ id: ingredientId, open: true });
   };
 
-  if (isError) {
-    const err = error as ErrorResponse;
-    dispatch(
-      openAlert({
-        message: err?.message ?? "Something went wrong",
-        varient: "error",
-      })
-    );
-  }
+  useEffect(() => {
+    if (isError) {
+      const err = error as ErrorResponse;
+      dispatch(
+        openAlert({
+          message: err?.message ?? "Something went wrong",
+          varient: "error",
+        })
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isError]);
 
   return (
-    <div style={{ marginLeft: "250px", marginTop: "70px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+    <div>
+      <div className={classes.container}>
         <Typography
           sx={{
             margin: "10px",
@@ -232,20 +257,11 @@ const IngredientsList = () => {
         </AddBox>
       </div>
       <Divider />
-      <div
-        style={{
-          borderRadius: "8px",
-          minHeight: "80vh",
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "center",
-          marginTop: "30px",
-        }}
-      >
+      <div className={classes.tableWrapper}>
         {isLoading ? (
           <LoadingComponent />
         ) : isError ? (
-          <Typography>Can't fetch users</Typography>
+          <Typography>Can't fetch Ingredients</Typography>
         ) : (
           <DataGrid
             columns={columns}
@@ -289,10 +305,17 @@ const IngredientsList = () => {
             color="error"
             onClick={handleDeleteOneClick}
           >
-            {loadingDelete ? <LoadingComponent size={20} /> : "Yes!"}
+            {loadingDelete ? <LoadingComponent size={20} /> : "Yes"}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* view ingredient */}
+      <ViewIngredient
+        closeModal={() => setViewIngredient({ id: "", open: false })}
+        open={viewIngredient.open}
+        ingredientId={viewIngredient.id}
+      />
     </div>
   );
 };

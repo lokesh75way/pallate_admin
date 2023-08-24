@@ -19,6 +19,7 @@ export const userSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: (response: { message: string }) => response.message,
       transformErrorResponse: (response) => response.data,
+      invalidatesTags: ["Users", "Ingredients"],
     }),
   }),
   overrideExisting: true,

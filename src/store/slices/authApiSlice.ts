@@ -16,7 +16,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
         return response.data;
       },
       transformErrorResponse: (response) => response.data,
-      invalidatesTags: ["Ingredients", "Users"],
+      invalidatesTags: ["Ingredients", "Users", "Ingredient"],
     }),
     forgotPassword: builder.mutation({
       query: (credentials) => ({

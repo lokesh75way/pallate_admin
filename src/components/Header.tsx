@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { styled } from "@mui/material/styles";
 import Sidebar from "./Sidebar";
-import Login from "./Login";
 import { useDispatch } from "react-redux";
 import {
   AppBar,
@@ -12,6 +11,8 @@ import {
   MenuItem,
 } from "@mui/material";
 import { userSignedOut } from "../store/slices/authSlice";
+import { LOCAL_TOKEN } from "../util/constants";
+import { useLocation, useNavigate } from "react-router";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   background: theme.palette.primary.dark,
@@ -24,9 +25,10 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
 const Header: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [showLoginPopup, setShowLoginPopup] = useState(false);
   const LOGIN_STATUS_KEY = "isLoggedIn";
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSidebarClose = () => {
     setIsSidebarOpen(false);
@@ -42,10 +44,9 @@ const Header: React.FC = () => {
 
   const handleLogoutConfirmation = () => {
     localStorage.setItem(LOGIN_STATUS_KEY, "false");
-    localStorage.removeItem("authToken");
+    localStorage.removeItem(LOCAL_TOKEN);
     dispatch(userSignedOut());
-
-    setShowLoginPopup(true);
+    navigate("/login", { state: { from: location.pathname } });
   };
 
   return (
@@ -91,27 +92,6 @@ const Header: React.FC = () => {
           </Typography>
         </MenuItem>
       </Menu>
-
-      {showLoginPopup && (
-        <>
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              backdropFilter: "blur(8px)",
-              zIndex: 1000,
-            }}
-          />
-          <Login
-            showPopup={true}
-            onLoginSuccess={() => setShowLoginPopup(false)}
-          />
-        </>
-      )}
     </>
   );
 };

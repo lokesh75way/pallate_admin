@@ -4,7 +4,7 @@ import { makeStyles } from "@mui/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from "@mui/icons-material/Add";
 
 const dummyUsers = [
   {
@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
     border: "1px solid #ccc",
     borderRadius: "5px",
     boxShadow: "0 2px 5px rgba(1, 1, 1, 0.1)",
-    width:'25%',
+    width: "25%",
     marginLeft: "37.5%",
     height: "200px",
     backgroundColor: "#fff",
@@ -58,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: "10px",
   },
   addBox: {
-    margin:'100px -180px 0 0px',
+    margin: "100px -180px 0 0px",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -74,7 +74,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const UserShowPage = () => {
+const ViewUser = () => {
   const classes = useStyles();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -105,10 +105,9 @@ const UserShowPage = () => {
         </Typography>
         <Typography className={classes.age}>Age: {user.age}</Typography>
         <Typography className={classes.email}>Email: {user.email}</Typography>
-
       </Box>
     </>
   );
 };
 
-export default UserShowPage;
+export default ViewUser;

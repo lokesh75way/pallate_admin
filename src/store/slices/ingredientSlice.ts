@@ -18,6 +18,7 @@ export const ingredientSlice = apiSlice.injectEndpoints({
       transformResponse: (response: { data: { ingredient: Ingredient } }) =>
         response.data.ingredient,
       transformErrorResponse: (response) => response.data,
+      providesTags: ["Ingredient"],
     }),
     deleteIngredients: builder.mutation({
       query: (credentials) => ({
@@ -27,6 +28,7 @@ export const ingredientSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: (response: { message: string }) => response.message,
       transformErrorResponse: (response) => response.data,
+      invalidatesTags: ["Ingredients"],
     }),
     createIngredients: builder.mutation({
       query: (credentials) => ({
@@ -37,26 +39,18 @@ export const ingredientSlice = apiSlice.injectEndpoints({
       transformResponse: (response: { data: { ingredients: Ingredient[] } }) =>
         response.data.ingredients,
       transformErrorResponse: (response) => response.data,
+      invalidatesTags: ["Ingredients"],
     }),
     updateIngredients: builder.mutation({
-      query: (credentials) => ({
-        url: "/ingredients",
-        method: "POST",
+      query: ({ id, ...credentials }) => ({
+        url: `/ingredients/${id}`,
+        method: "PUT",
         body: credentials,
       }),
       transformResponse: (response: { data: { ingredients: Ingredient[] } }) =>
         response.data.ingredients,
       transformErrorResponse: (response) => response.data,
-    }),
-    uploadImage: builder.mutation({
-      query: (credentials) => ({
-        url: "/images",
-        method: "POST",
-        body: credentials,
-      }),
-      transformResponse: (response: { data: { image: string } }) =>
-        response.data.image,
-      transformErrorResponse: (response) => response.data,
+      invalidatesTags: ["Ingredients", "Ingredient"],
     }),
   }),
   overrideExisting: true,
@@ -66,6 +60,6 @@ export const {
   useGetIngredientsQuery,
   useDeleteIngredientsMutation,
   useCreateIngredientsMutation,
-  useUploadImageMutation,
   useGetIngredientQuery,
+  useUpdateIngredientsMutation,
 } = ingredientSlice;

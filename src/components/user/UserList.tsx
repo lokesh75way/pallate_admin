@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import {
   Avatar,
@@ -12,10 +12,8 @@ import {
   Divider,
   Typography,
 } from "@mui/material";
-import styled from "@emotion/styled";
+import { makeStyles } from "@mui/styles";
 import { Delete } from "@mui/icons-material";
-
-import { UserData } from "../../models/UserModel";
 import {
   useDeleteUsersMutation,
   useGetUsersQuery,
@@ -24,22 +22,22 @@ import { useDispatch } from "react-redux";
 import { openAlert } from "../../store/slices/alertSlice";
 import LoadingComponent from "../Loading";
 
-const TypographyUser = styled(Typography)({
-  margin: "10px",
-  fontWeight: "bold",
-  fontSize: 20,
-});
-
-export interface userApiResponse {
-  data: {
-    users: UserData[];
-  };
-}
+const useStyles = makeStyles((theme) => ({
+  container: {
+    borderRadius: "8px",
+    minHeight: "80vh",
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    marginTop: "30px",
+  },
+}));
 
 const UserList: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [deleteId, setDeleteId] = useState({ id: "", name: "" });
   const dispatch = useDispatch();
+  const classes = useStyles();
   const { data, isLoading, isError, error } = useGetUsersQuery();
   const [deletUser, { isLoading: loadingDelete }] = useDeleteUsersMutation();
 
@@ -103,30 +101,31 @@ const UserList: React.FC = () => {
     },
   ];
 
-  if (isError) {
-    const err = error as ErrorResponse;
-    dispatch(
-      openAlert({
-        message: err?.message ?? "Something went wrong",
-        varient: "error",
-      })
-    );
-  }
+  useEffect(() => {
+    if (isError) {
+      const err = error as ErrorResponse;
+      dispatch(
+        openAlert({
+          message: err?.message ?? "Something went wrong",
+          varient: "error",
+        })
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isError]);
 
   return (
-    <div style={{ marginLeft: "250px", marginTop: "70px" }}>
-      <TypographyUser>Users</TypographyUser>
-      <Divider />
-      <div
-        style={{
-          borderRadius: "8px",
-          minHeight: "80vh",
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "center",
-          marginTop: "30px",
+    <div>
+      <Typography
+        sx={{
+          margin: "10px",
+          fontSize: 30,
         }}
       >
+        Users
+      </Typography>
+      <Divider />
+      <div className={classes.container}>
         {isLoading ? (
           <LoadingComponent />
         ) : isError ? (
@@ -171,7 +170,7 @@ const UserList: React.FC = () => {
             color="error"
             onClick={handleDeleteOneClick}
           >
-            {loadingDelete ? <LoadingComponent size={20} /> : "Yes!"}
+            {loadingDelete ? <LoadingComponent size={20} /> : "Yes"}
           </Button>
         </DialogActions>
       </Dialog>
