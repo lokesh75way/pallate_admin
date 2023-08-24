@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
 import { makeStyles } from "@mui/styles";
@@ -18,6 +18,7 @@ import { useDispatch } from "react-redux";
 import { openAlert } from "../../store/slices/alertSlice";
 import cameraIcon from "../../assets/camera.svg";
 import { useUploadImageMutation } from "../../store/slices/imageSlice";
+import LoadingComponent from "../Loading";
 
 const useStyles = makeStyles((theme) => ({
   imageInput: {
@@ -257,6 +258,9 @@ const IngredientForm = ({
                   size="medium"
                   label="Quantity"
                   type="number"
+                  inputProps={{
+                    min: 0,
+                  }}
                   {...field}
                   error={!!errors.quantity}
                   helperText={errors.quantity?.message}
@@ -292,6 +296,7 @@ const IngredientForm = ({
                     <MenuItem value="L">LT</MenuItem>
                     <MenuItem value="ML">ML</MenuItem>
                     <MenuItem value="COUNT">COUNT</MenuItem>
+                    <MenuItem value="PCS">PIECES</MenuItem>
                   </TextField>
                   <FormHelperText>{errors.type?.message}</FormHelperText>
                 </FormControl>
@@ -367,6 +372,7 @@ const IngredientForm = ({
                 if (ref.current !== null) ref.current.click();
               }}
               className={classes.uploadButton}
+              disabled={imageUploading}
             >
               <div
                 className={classes.imageInput}
@@ -375,12 +381,18 @@ const IngredientForm = ({
                 }}
               >
                 <div className={classes.placeHolder}>
-                  <img src={cameraIcon} alt="" />
-                  <span
-                    style={{ color: "rgb(150, 150, 150", marginTop: "5px" }}
-                  >
-                    Click Here to Upload <br /> Picture
-                  </span>
+                  {!imageUploading ? (
+                    <>
+                      <img src={cameraIcon} alt="" />
+                      <span
+                        style={{ color: "rgb(150, 150, 150", marginTop: "5px" }}
+                      >
+                        Click Here to Upload <br /> Picture
+                      </span>
+                    </>
+                  ) : (
+                    <LoadingComponent />
+                  )}
                 </div>
               </div>
             </button>

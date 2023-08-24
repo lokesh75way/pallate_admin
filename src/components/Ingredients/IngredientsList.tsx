@@ -156,9 +156,6 @@ const IngredientsList = () => {
           >
             <Delete />
           </IconButton>
-          <IconButton onClick={(event) => handleOpenIngredient(params)}>
-            <Visibility />
-          </IconButton>
         </Box>
       ),
     },
