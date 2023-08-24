@@ -19,6 +19,7 @@ import { openAlert } from "../../store/slices/alertSlice";
 import cameraIcon from "../../assets/camera.svg";
 import { useUploadImageMutation } from "../../store/slices/imageSlice";
 import LoadingComponent from "../Loading";
+import { useNavigate } from "react-router";
 
 const useStyles = makeStyles((theme) => ({
   imageInput: {
@@ -114,6 +115,7 @@ const IngredientForm = ({
   const [showImgErr, setShowImgErr] = useState(false);
   const ref = useRef<any>(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const {
     handleSubmit,
@@ -157,6 +159,7 @@ const IngredientForm = ({
             varient: "success",
           })
         );
+        navigate("/ingredients");
       } else {
         setShowImgErr(true);
       }
