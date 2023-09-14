@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
-import { useNavigate } from "react-router-dom";
-import { Delete, Edit, Visibility } from "@mui/icons-material";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Delete, Edit } from "@mui/icons-material";
 import {
   Button,
   Box,
@@ -18,6 +18,8 @@ import {
   DialogActions,
   Divider,
   Chip,
+  Autocomplete,
+  TextField,
 } from "@mui/material";
 import {
   useGetIngredientsQuery,
@@ -29,6 +31,7 @@ import LoadingComponent from "../Loading";
 import dayjs from "dayjs";
 import { makeStyles } from "@mui/styles";
 import ViewIngredient from "./ViewIngredient";
+import { useGetUsersQuery } from "../../store/slices/userSlice";
 
 const AddBox = styled(Box)({
   display: "flex",
@@ -51,6 +54,13 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "center",
     marginTop: "30px",
   },
+
+  actionContainer: {
+    marginTop: "8px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
 }));
 
 const IngredientsList = () => {
@@ -61,6 +71,8 @@ const IngredientsList = () => {
   const [isBulkDeleteVisible, setBulkDeleteVisible] = useState(false);
   const dispatch = useDispatch();
   const classes = useStyles();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [viewIngredient, setViewIngredient] = useState({ id: "", open: false });
   const {
     data: ingredients,
@@ -70,6 +82,8 @@ const IngredientsList = () => {
   } = useGetIngredientsQuery();
   const [deleteIngredients, { isLoading: loadingDelete }] =
     useDeleteIngredientsMutation();
+  const { data: users } = useGetUsersQuery();
+  const [filteredIngredients, setFilteredIngredients] = useState(ingredients);
 
   const columns: GridColDef[] = [
     {
@@ -213,6 +227,32 @@ const IngredientsList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isError]);
 
+  const loadOptions = useMemo(() => {
+    return (users || []).map((user) => ({
+      id: user?._id,
+      label: user?.name,
+    }));
+  }, [users]);
+
+  const filterUser = (value?: string) => {
+    setSearchParams((params) => {
+      if (value) params.set("user", value);
+      else params.delete("user");
+      return params;
+    });
+  };
+
+  useEffect(() => {
+    const filterId = searchParams.get("user");
+    if (filterId) {
+      setFilteredIngredients(() =>
+        ingredients?.filter((ingredient) => filterId === ingredient.user._id)
+      );
+    } else {
+      setFilteredIngredients(ingredients);
+    }
+  }, [searchParams, ingredients]);
+
   return (
     <div>
       <div className={classes.container}>
@@ -254,6 +294,26 @@ const IngredientsList = () => {
         </AddBox>
       </div>
       <Divider />
+      <div className={classes.actionContainer}>
+        <Autocomplete
+          onChange={(e, value) => {
+            filterUser(value?.id);
+          }}
+          sx={{ maxWidth: "300px" }}
+          fullWidth
+          options={loadOptions}
+          getOptionLabel={(option) => option.label}
+          renderInput={(params) => (
+            <TextField {...params} label="Filter by user" />
+          )}
+          isOptionEqualToValue={(option, test) => option.id === test.id}
+          renderOption={(props, option) => (
+            <li {...props} key={option.id}>
+              {option.label}
+            </li>
+          )}
+        />
+      </div>
       <div className={classes.tableWrapper}>
         {isLoading ? (
           <LoadingComponent />
@@ -262,7 +322,7 @@ const IngredientsList = () => {
         ) : (
           <DataGrid
             columns={columns}
-            rows={ingredients || []}
+            rows={filteredIngredients || []}
             pagination
             initialState={{
               pagination: { paginationModel: { pageSize: 25 } },
