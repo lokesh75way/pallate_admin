@@ -1,38 +1,16 @@
 import React, { useState } from "react";
-import { styled } from "@mui/material/styles";
-import Sidebar from "./Sidebar";
 import { useDispatch } from "react-redux";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Avatar,
-  Menu,
-  MenuItem,
-} from "@mui/material";
+import { Typography, Avatar, Menu, MenuItem, Box } from "@mui/material";
 import { userSignedOut } from "../store/slices/authSlice";
 import { LOCAL_TOKEN } from "../util/constants";
 import { useLocation, useNavigate } from "react-router";
 
-const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  background: theme.palette.primary.dark,
-  zIndex: 1300,
-  width: "100%",
-  color: theme.palette.common.white,
-  height: "57px",
-}));
-
 const Header: React.FC = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const LOGIN_STATUS_KEY = "isLoggedIn";
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const handleSidebarClose = () => {
-    setIsSidebarOpen(false);
-  };
 
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -51,23 +29,25 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <StyledAppBar position="fixed">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Pallate Admin
-          </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+        }}
+      >
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Pallate Admin
+        </Typography>
 
-          <Avatar
-            alt="Admin"
-            src="/path/to/profile-image.jpg"
-            sx={{ marginLeft: 2, cursor: "pointer" }}
-            onClick={handleAvatarClick}
-          />
-        </Toolbar>
-      </StyledAppBar>
-
-      <Sidebar onClose={handleSidebarClose} />
-
+        <Avatar
+          alt="Admin"
+          src="/path/to/profile-image.jpg"
+          sx={{ marginLeft: 2, cursor: "pointer" }}
+          onClick={handleAvatarClick}
+        />
+      </Box>
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
