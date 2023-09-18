@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Delete, Edit } from "@mui/icons-material";
 import {
   Button,
@@ -32,6 +32,7 @@ import dayjs from "dayjs";
 import { makeStyles } from "@mui/styles";
 import ViewIngredient from "./ViewIngredient";
 import { useGetUsersQuery } from "../../store/slices/userSlice";
+import EmptyTable from "../EmptyTable";
 
 const AddBox = styled(Box)({
   display: "flex",
@@ -56,7 +57,7 @@ const useStyles = makeStyles((theme) => ({
   },
 
   actionContainer: {
-    marginTop: "8px",
+    marginTop: "10px",
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-end",
@@ -72,7 +73,6 @@ const IngredientsList = () => {
   const dispatch = useDispatch();
   const classes = useStyles();
   const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
   const [viewIngredient, setViewIngredient] = useState({ id: "", open: false });
   const {
     data: ingredients,
@@ -89,6 +89,7 @@ const IngredientsList = () => {
     {
       field: "name",
       headerName: "Name",
+      minWidth: 240,
       flex: 1,
       sortable: true,
       renderHeader: (params) => (
@@ -106,6 +107,7 @@ const IngredientsList = () => {
     {
       field: "user",
       headerName: "User Assigned",
+      minWidth: 170,
       flex: 0.6,
       sortable: true,
       renderCell: (params) => (
@@ -125,18 +127,21 @@ const IngredientsList = () => {
     {
       field: "quantity",
       headerName: "Quantity",
+      minWidth: 130,
       flex: 0.3,
       sortable: true,
     },
     {
       field: "type",
       headerName: "Unit",
+      minWidth: 110,
       flex: 0.2,
       sortable: true,
     },
     {
       field: "price",
       headerName: "Price",
+      minWidth: 120,
       flex: 0.3,
       sortable: true,
       renderCell: (params) => `$${params.value}`,
@@ -144,6 +149,7 @@ const IngredientsList = () => {
     {
       field: "expiry",
       headerName: "Expiry",
+      minWidth: 150,
       flex: 0.5,
       sortable: true,
       valueFormatter: (params) =>
@@ -152,6 +158,7 @@ const IngredientsList = () => {
     {
       field: "delete",
       headerName: "Actions",
+      minWidth: 150,
       flex: 0.5,
       sortable: false,
       renderCell: (params) => (
@@ -207,11 +214,6 @@ const IngredientsList = () => {
   const handleRowSelectionModelChange = (selectionModel: any) => {
     setSelectedRows(selectionModel);
     setBulkDeleteVisible(selectionModel.length > 0);
-  };
-
-  const handleOpenIngredient = (params: any) => {
-    const ingredientId = params.id;
-    setViewIngredient({ id: ingredientId, open: true });
   };
 
   useEffect(() => {
@@ -320,18 +322,25 @@ const IngredientsList = () => {
         ) : isError ? (
           <Typography>Can't fetch Ingredients</Typography>
         ) : (
-          <DataGrid
-            columns={columns}
-            rows={filteredIngredients || []}
-            pagination
-            initialState={{
-              pagination: { paginationModel: { pageSize: 25 } },
-            }}
-            getRowId={(row) => row._id}
-            disableRowSelectionOnClick={true}
-            onRowSelectionModelChange={handleRowSelectionModelChange}
-            checkboxSelection
-          />
+          <Box sx={{ maxWidth: "100vw", width: "100%", overflowX: "auto" }}>
+            <DataGrid
+              columns={columns}
+              rows={filteredIngredients || []}
+              pagination
+              initialState={{
+                pagination: { paginationModel: { pageSize: 25 } },
+              }}
+              slots={{
+                noRowsOverlay: EmptyTable,
+              }}
+              autoHeight
+              sx={{ "--DataGrid-overlayHeight": 400 }}
+              getRowId={(row) => row._id}
+              disableRowSelectionOnClick={true}
+              onRowSelectionModelChange={handleRowSelectionModelChange}
+              checkboxSelection
+            />
+          </Box>
         )}
       </div>
 

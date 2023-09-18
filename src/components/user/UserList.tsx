@@ -26,6 +26,7 @@ import { openAlert } from "../../store/slices/alertSlice";
 import LoadingComponent from "../Loading";
 import { useNavigate } from "react-router";
 import { createSearchParams } from "react-router-dom";
+import EmptyTable from "../EmptyTable";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -76,6 +77,7 @@ const UserList: React.FC = () => {
     {
       field: "name",
       headerName: "Name",
+      minWidth: 240,
       flex: 1,
       sortable: true,
       renderCell: (params) => (
@@ -90,10 +92,17 @@ const UserList: React.FC = () => {
         />
       ),
     },
-    { field: "email", headerName: "Email", flex: 0.8, sortable: true },
+    {
+      field: "email",
+      headerName: "Email",
+      minWidth: 250,
+      flex: 0.8,
+      sortable: true,
+    },
     {
       field: "delete",
       headerName: "Actions",
+      minWidth: 250,
       flex: 0.5,
       sortable: false,
       renderCell: (params) => (
@@ -198,16 +207,23 @@ const UserList: React.FC = () => {
         ) : isError ? (
           <Typography>Can't fetch users</Typography>
         ) : (
-          <DataGrid
-            columns={columns}
-            apiRef={apiRef}
-            rows={data || []}
-            pagination
-            initialState={{
-              pagination: { paginationModel: { pageSize: 25 } },
-            }}
-            getRowId={(row) => row._id}
-          />
+          <Box sx={{ maxWidth: "100vw", width: "100%", overflowX: "auto" }}>
+            <DataGrid
+              columns={columns}
+              apiRef={apiRef}
+              rows={data || []}
+              pagination
+              initialState={{
+                pagination: { paginationModel: { pageSize: 25 } },
+              }}
+              getRowId={(row) => row._id}
+              slots={{
+                noRowsOverlay: EmptyTable,
+              }}
+              autoHeight
+              sx={{ "--DataGrid-overlayHeight": "300px" }}
+            />
+          </Box>
         )}
       </div>
 
