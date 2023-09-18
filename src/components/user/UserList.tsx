@@ -11,15 +11,17 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  IconButton,
   TextField,
   Typography,
   debounce,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { Delete, RemoveRedEye } from "@mui/icons-material";
+import { Delete, DeviceUnknown, Edit, RemoveRedEye } from "@mui/icons-material";
 import {
   useDeleteUsersMutation,
   useGetUsersQuery,
+  useUpdateUsersMutation,
 } from "../../store/slices/userSlice";
 import { useDispatch } from "react-redux";
 import { openAlert } from "../../store/slices/alertSlice";
@@ -27,6 +29,7 @@ import LoadingComponent from "../Loading";
 import { useNavigate } from "react-router";
 import { createSearchParams } from "react-router-dom";
 import EmptyTable from "../EmptyTable";
+import "./style.css";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -35,16 +38,24 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "center",
-    marginTop: "30px",
+    marginTop: "10px",
   },
 
   actionContainer: {
-    marginTop: "10px",
+    marginTop: "20px",
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-end",
   },
 }));
+
+const initialMacDialog = {
+  open: false,
+  address: "",
+  user: "",
+  isEdit: false,
+  userId: "",
+};
 
 const UserList: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -54,6 +65,8 @@ const UserList: React.FC = () => {
   const navigate = useNavigate();
   const { data, isLoading, isError, error } = useGetUsersQuery();
   const [deletUser, { isLoading: loadingDelete }] = useDeleteUsersMutation();
+  const [macDialog, setMacDialog] = useState(initialMacDialog);
+  const [updateUser, { isLoading: loadingUserEdit }] = useUpdateUsersMutation();
 
   const handleDeleteOneClick = async () => {
     try {
@@ -62,6 +75,31 @@ const UserList: React.FC = () => {
       }).unwrap();
       setOpenDialog(false);
       dispatch(openAlert({ message: response, varient: "success" }));
+    } catch (err) {
+      const error = err as ErrorResponse;
+      const message =
+        error?.message === "Validation error!"
+          ? error.data?.errors[0].msg ?? "Something went wrong"
+          : error?.message ?? "Something went wrong";
+
+      dispatch(openAlert({ message, varient: "error" }));
+    }
+  };
+
+  const handleUpdateMac = async () => {
+    try {
+      await updateUser({
+        id: macDialog.userId,
+        mac_address: macDialog.address,
+      }).unwrap();
+
+      dispatch(
+        openAlert({
+          message: "Device updated successfully",
+          varient: "success",
+        })
+      );
+      setMacDialog(initialMacDialog);
     } catch (err) {
       const error = err as ErrorResponse;
       const message =
@@ -96,14 +134,68 @@ const UserList: React.FC = () => {
       field: "email",
       headerName: "Email",
       minWidth: 250,
-      flex: 0.8,
+      flex: 1,
       sortable: true,
     },
     {
-      field: "delete",
+      field: "mac_address",
+      headerName: "MAC address",
+      minWidth: 200,
+      flex: 0.7,
+      sortable: false,
+      renderCell(params) {
+        if (params.row.mac_address) return params.row.mac_address;
+        return (
+          <Button
+            size="small"
+            variant="text"
+            color="primary"
+            startIcon={<DeviceUnknown />}
+            onClick={(event) => {
+              event.stopPropagation();
+              setMacDialog({
+                open: true,
+                address: "",
+                isEdit: false,
+                user: params.row.name,
+                userId: params.id as string,
+              });
+            }}
+          >
+            Assign Device
+          </Button>
+        );
+      },
+    },
+    {
+      field: "editMac",
+      type: "actions",
+      width: 70,
+      cellClassName: "editMac",
+      getActions: (params) => {
+        if (!params.row.mac_address) return [<></>];
+        return [
+          <IconButton
+            onClick={(event) => {
+              setMacDialog({
+                open: true,
+                address: params.row.mac_address,
+                user: params.row.name,
+                isEdit: true,
+                userId: params.id as string,
+              });
+            }}
+          >
+            <Edit />
+          </IconButton>,
+        ];
+      },
+    },
+    {
+      field: "actions",
       headerName: "Actions",
-      minWidth: 250,
-      flex: 0.5,
+      minWidth: 240,
+      flex: 0.9,
       sortable: false,
       renderCell: (params) => (
         <Box
@@ -119,7 +211,6 @@ const UserList: React.FC = () => {
             startIcon={<RemoveRedEye />}
             onClick={(event) => {
               event.stopPropagation();
-              navigate("/ingredients", {});
               navigate({
                 pathname: "/ingredients",
                 search: `?${createSearchParams({
@@ -255,6 +346,57 @@ const UserList: React.FC = () => {
             onClick={handleDeleteOneClick}
           >
             {loadingDelete ? <LoadingComponent size={20} /> : "Yes"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add or edit mac address */}
+      <Dialog
+        open={macDialog.open}
+        aria-describedby="alert-dialog-slide-description"
+      >
+        <DialogTitle>{macDialog.isEdit ? "Edit" : "Add"} Device</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            To {macDialog.isEdit ? "Edit" : "Add"} device of the user{" "}
+            {macDialog.user} enter the MAC address
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="mac_address"
+            label="MAC Address"
+            value={macDialog.address}
+            onChange={(e) => {
+              setMacDialog((prvs) => ({ ...prvs, address: e.target.value }));
+            }}
+            type="text"
+            fullWidth
+            variant="standard"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setMacDialog(initialMacDialog);
+            }}
+            disabled={loadingUserEdit}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={loadingUserEdit}
+            color="primary"
+            onClick={handleUpdateMac}
+          >
+            {loadingUserEdit ? (
+              <LoadingComponent size={20} />
+            ) : macDialog.isEdit ? (
+              "Edit"
+            ) : (
+              "Add"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

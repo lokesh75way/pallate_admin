@@ -53,11 +53,11 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "center",
-    marginTop: "30px",
+    marginTop: "10px",
   },
 
   actionContainer: {
-    marginTop: "10px",
+    marginTop: "20px",
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-end",
@@ -156,7 +156,7 @@ const IngredientsList = () => {
         dayjs(params.value).utc().format("MM-DD-YYYY"),
     },
     {
-      field: "delete",
+      field: "actions",
       headerName: "Actions",
       minWidth: 150,
       flex: 0.5,
@@ -229,6 +229,8 @@ const IngredientsList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isError]);
 
+  const [userFilter, setUserFilter] = useState({ id: "", label: "" });
+
   const loadOptions = useMemo(() => {
     return (users || []).map((user) => ({
       id: user?._id,
@@ -247,12 +249,18 @@ const IngredientsList = () => {
   useEffect(() => {
     const filterId = searchParams.get("user");
     if (filterId) {
+      setUserFilter(() => {
+        const item = loadOptions.find((opt) => opt.id === filterId);
+        return item || { id: "", label: "" };
+      });
       setFilteredIngredients(() =>
         ingredients?.filter((ingredient) => filterId === ingredient.user._id)
       );
     } else {
+      setUserFilter({ id: "", label: "" });
       setFilteredIngredients(ingredients);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, ingredients]);
 
   return (
@@ -301,6 +309,7 @@ const IngredientsList = () => {
           onChange={(e, value) => {
             filterUser(value?.id);
           }}
+          value={userFilter}
           sx={{ maxWidth: "300px" }}
           fullWidth
           options={loadOptions}

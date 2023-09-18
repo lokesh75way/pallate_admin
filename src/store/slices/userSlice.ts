@@ -21,8 +21,23 @@ export const userSlice = apiSlice.injectEndpoints({
       transformErrorResponse: (response) => response.data,
       invalidatesTags: ["Users", "Ingredients"],
     }),
+    updateUsers: builder.mutation({
+      query: ({ id, ...credentials }) => ({
+        url: `/users/${id}`,
+        method: "PUT",
+        body: credentials,
+      }),
+      transformResponse: (response: { data: { users: User[] } }) =>
+        response.data.users,
+      transformErrorResponse: (response) => response.data,
+      invalidatesTags: ["Users"],
+    }),
   }),
   overrideExisting: true,
 });
 
-export const { useGetUsersQuery, useDeleteUsersMutation } = userSlice;
+export const {
+  useGetUsersQuery,
+  useDeleteUsersMutation,
+  useUpdateUsersMutation,
+} = userSlice;

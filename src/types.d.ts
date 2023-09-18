@@ -3,6 +3,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  mac_address?: string;
 }
 
 interface SuccessResponse {
