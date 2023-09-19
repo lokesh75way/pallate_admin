@@ -19,7 +19,7 @@ export const userSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: (response: { message: string }) => response.message,
       transformErrorResponse: (response) => response.data,
-      invalidatesTags: ["Users", "Ingredients"],
+      invalidatesTags: ["Users", "Ingredients", "Annotators"],
     }),
     updateUsers: builder.mutation({
       query: ({ id, ...credentials }) => ({

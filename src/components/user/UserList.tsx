@@ -29,7 +29,7 @@ import LoadingComponent from "../Loading";
 import { useNavigate } from "react-router";
 import { createSearchParams } from "react-router-dom";
 import EmptyTable from "../EmptyTable";
-import "./style.css";
+import "../style.css";
 
 const useStyles = makeStyles((theme) => ({
   container: {

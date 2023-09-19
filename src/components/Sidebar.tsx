@@ -11,6 +11,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import FastfoodIcon from "@mui/icons-material/Fastfood";
 import { styled } from "@mui/material/styles";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 const sidebarItems = [
   {
@@ -27,6 +28,11 @@ const sidebarItems = [
     name: "Ingredients",
     url: "/ingredients",
     icon: <FastfoodIcon />,
+  },
+  {
+    name: "Annotators",
+    url: "/annotators",
+    icon: <AdminPanelSettingsIcon />,
   },
 ];
 
