@@ -2,13 +2,18 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface authState {
   authenticated: boolean;
-  user?: User;
+  user: User;
   token: string;
 }
 
 const initialState: authState = {
   authenticated: false,
-  user: undefined,
+  user: {
+    _id: "",
+    email: "",
+    name: "",
+    role: "USER",
+  },
   token: "",
 };
 
@@ -27,7 +32,6 @@ export const authSlice = createSlice({
     userSignedOut: (state) => {
       state.authenticated = false;
       state.token = "";
-      state.user = undefined;
     },
   },
 });

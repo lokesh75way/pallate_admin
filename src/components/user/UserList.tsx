@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent, useContext } from "react";
 import { DataGrid, GridColDef, useGridApiRef } from "@mui/x-data-grid";
 import {
   Avatar,
@@ -30,6 +30,7 @@ import { useNavigate } from "react-router";
 import { createSearchParams } from "react-router-dom";
 import EmptyTable from "../EmptyTable";
 import "../style.css";
+import { AbilityContext, Can } from "../AccessControl";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -67,6 +68,7 @@ const UserList: React.FC = () => {
   const [deletUser, { isLoading: loadingDelete }] = useDeleteUsersMutation();
   const [macDialog, setMacDialog] = useState(initialMacDialog);
   const [updateUser, { isLoading: loadingUserEdit }] = useUpdateUsersMutation();
+  const userAbility = useContext(AbilityContext);
 
   const handleDeleteOneClick = async () => {
     try {
@@ -145,6 +147,8 @@ const UserList: React.FC = () => {
       sortable: false,
       renderCell(params) {
         if (params.row.mac_address) return params.row.mac_address;
+        if (!params.row.mac_address && userAbility.cannot("update", "User"))
+          return <>-</>;
         return (
           <Button
             size="small"
@@ -173,7 +177,8 @@ const UserList: React.FC = () => {
       width: 70,
       cellClassName: "editMac",
       getActions: (params) => {
-        if (!params.row.mac_address) return [<></>];
+        if (!params.row.mac_address || userAbility.cannot("update", "User"))
+          return [<></>];
         return [
           <IconButton
             onClick={(event) => {
@@ -221,19 +226,21 @@ const UserList: React.FC = () => {
           >
             Ingredients
           </Button>
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            startIcon={<Delete />}
-            onClick={(event) => {
-              event.stopPropagation();
-              setDeleteId({ id: params.id as string, name: params.row.name });
-              setOpenDialog(true);
-            }}
-          >
-            Delete
-          </Button>
+          <Can I="delete" a="User">
+            <Button
+              size="small"
+              variant="contained"
+              color="error"
+              startIcon={<Delete />}
+              onClick={(event) => {
+                event.stopPropagation();
+                setDeleteId({ id: params.id as string, name: params.row.name });
+                setOpenDialog(true);
+              }}
+            >
+              Delete
+            </Button>
+          </Can>
         </Box>
       ),
     },

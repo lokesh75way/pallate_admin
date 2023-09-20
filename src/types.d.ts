@@ -2,9 +2,11 @@ interface User {
   _id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   mac_address?: string;
 }
+
+type UserRole = "ADMIN" | "ANNOTATOR" | "USER";
 
 interface SuccessResponse {
   data: any;

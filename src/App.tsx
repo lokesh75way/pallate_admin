@@ -13,6 +13,7 @@ import Authorization from "./components/Authorization";
 import Login from "./components/Login";
 import DashBoard from "./components/DashBoard";
 import AnnotatorsList from "./components/annotators/AnnotatorsList";
+import { CanAccessModule } from "./components/AccessControl";
 dayjs.extend(utc);
 
 function App() {
@@ -23,15 +24,21 @@ function App() {
           <Route element={<Authorization />}>
             <Route path="/" element={<Layout />}>
               <Route path="" element={<DashBoard />} />
-              <Route path="/ingredients">
+              <Route
+                path="/ingredients"
+                element={<CanAccessModule module="Ingredient" />}
+              >
                 <Route path="" element={<IngredientsList />} />
                 <Route path="create" element={<CreateIngredient />} />
                 <Route path="edit/:ingredientId" element={<EditIngredient />} />
               </Route>
-              <Route path="/annotators">
+              <Route
+                path="/annotators"
+                element={<CanAccessModule module="Annotator" />}
+              >
                 <Route path="" element={<AnnotatorsList />} />
               </Route>
-              <Route path="/users">
+              <Route path="/users" element={<CanAccessModule module="User" />}>
                 <Route path="" element={<UserList />} />
                 {/* <Route path=":id" element={<ViewUser />} /> */}
               </Route>
