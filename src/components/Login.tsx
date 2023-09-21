@@ -64,6 +64,12 @@ const BlueCircularProgress = styled(CircularProgress)({
   color: "#002D62",
 });
 
+const MainHeading = styled("h1")({
+  color: "#002D62",
+  textAlign: "center",
+  marginBottom: "30px",
+});
+
 type FormData = {
   username: string;
   password: string;
@@ -190,6 +196,7 @@ const Login = () => {
       }}
     >
       <div>
+        <MainHeading>Pallate Admin Portal</MainHeading>
         <LoginContainer>
           <LoginText>Login</LoginText>
           <form onSubmit={handleSubmit(handleFormSubmit)}>
