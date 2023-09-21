@@ -47,6 +47,7 @@ const LoginText = styled(DialogTitle)({
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
+  color: "#002D62",
 });
 const StyledButton = styled(Button)({
   backgroundColor: "#002D62",
@@ -67,7 +68,7 @@ const BlueCircularProgress = styled(CircularProgress)({
 const MainHeading = styled("h1")({
   color: "#002D62",
   textAlign: "center",
-  marginBottom: "30px",
+  marginBottom: "70px",
 });
 
 type FormData = {
