@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Typography, Avatar, Menu, MenuItem, Box } from "@mui/material";
 import { userSignedOut } from "../store/slices/authSlice";
 import { LOCAL_TOKEN } from "../util/constants";
 import { useLocation, useNavigate } from "react-router";
+import { RootState } from "../store/store";
 
 const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { user } = useSelector((state: RootState) => state.auth);
   const LOGIN_STATUS_KEY = "isLoggedIn";
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -42,7 +44,7 @@ const Header: React.FC = () => {
         </Typography>
 
         <Avatar
-          alt="Admin"
+          alt={user.name?.toUpperCase() || "A"}
           src="/path/to/profile-image.jpg"
           sx={{ marginLeft: 2, cursor: "pointer" }}
           onClick={handleAvatarClick}

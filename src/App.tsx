@@ -14,6 +14,7 @@ import Login from "./components/Login";
 import DashBoard from "./components/DashBoard";
 import AnnotatorsList from "./components/annotators/AnnotatorsList";
 import { CanAccessModule } from "./components/AccessControl";
+import ErrorPage from "./components/ErrorPage";
 dayjs.extend(utc);
 
 function App() {
@@ -45,7 +46,7 @@ function App() {
             </Route>
           </Route>
           <Route path="/login" element={<Login />} />
-          <Route path="*" element={<div>Not found</div>} />
+          <Route path="*" element={<ErrorPage />} />
         </Routes>
         <SnackBar />
       </Router>

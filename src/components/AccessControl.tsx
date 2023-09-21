@@ -12,7 +12,7 @@ export const CanAccessModule = ({ module }: { module: Subject }) => {
   return (
     <Can I="read" a={module} passThrough>
       {(allowed) =>
-        allowed ? <Outlet /> : <Navigate to="/not-found" replace />
+        allowed ? <Outlet /> : <Navigate to="/unauthorized" replace />
       }
     </Can>
   );
