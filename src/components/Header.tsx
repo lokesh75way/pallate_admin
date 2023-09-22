@@ -65,6 +65,7 @@ const Header: React.FC = () => {
         PaperProps={{
           style: {
             backgroundColor: "#002D62",
+            marginTop: 12,
           },
         }}
       >
