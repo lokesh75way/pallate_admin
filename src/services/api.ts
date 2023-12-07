@@ -8,7 +8,8 @@ import {
 import { RootState } from "../store/store";
 import { userSignedOut } from "../store/slices/authSlice";
 
-const apiURL = process.env.REACT_APP_API_BASE_URL;
+// const apiURL = process.env.REACT_APP_API_BASE_URL;
+const apiURL = "http://localhost:5000/api/pallate/api";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: apiURL,
@@ -41,6 +42,6 @@ const baseQueryWithInterception: BaseQueryFn<
 
 export const apiSlice = createApi({
   baseQuery: baseQueryWithInterception,
-  tagTypes: ["Users", "Ingredients", "Ingredient", "Annotators"],
+  tagTypes: ["User", "Ingredient", "Annotator", "Recipe"],
   endpoints: (builder) => ({}),
 });

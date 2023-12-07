@@ -2,9 +2,11 @@ import React from "react";
 import { Typography, Divider } from "@mui/material";
 import { useCreateIngredientsMutation } from "../../store/slices/ingredientSlice";
 import IngredientForm, { IngredientFormType } from "./IngredientForm";
+import useGenerateRecipe from "../../hooks/useGenerateRecipe";
 
 const CreateIngredient: React.FC = () => {
   const [createIngredient, { isLoading }] = useCreateIngredientsMutation();
+  const { generateRecipes } = useGenerateRecipe();
 
   const submit = async (data: IngredientFormType) => {
     const {
@@ -13,6 +15,7 @@ const CreateIngredient: React.FC = () => {
       ...formData
     } = data;
     await createIngredient({ user: userId, image, ...formData }).unwrap();
+    generateRecipes(userId);
   };
 
   return (

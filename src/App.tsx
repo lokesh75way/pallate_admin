@@ -15,6 +15,8 @@ import DashBoard from "./components/DashBoard";
 import AnnotatorsList from "./components/annotators/AnnotatorsList";
 import { CanAccessModule } from "./components/AccessControl";
 import ErrorPage from "./components/ErrorPage";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 dayjs.extend(utc);
 
 function App() {
@@ -49,6 +51,7 @@ function App() {
           <Route path="*" element={<ErrorPage />} />
         </Routes>
         <SnackBar />
+        <ToastContainer />
       </Router>
     </>
   );

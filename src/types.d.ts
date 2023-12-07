@@ -21,6 +21,7 @@ interface ErrorResponse extends SuccessResponse {
 type Quantity_Type = "KG" | "G" | "L" | "ML" | "COUNT";
 
 interface Ingredient {
+  _id: string;
   user: {
     _id: string;
     name: string;

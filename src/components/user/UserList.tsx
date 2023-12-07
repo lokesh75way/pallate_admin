@@ -39,14 +39,7 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "center",
-    marginTop: "10px",
-  },
-
-  actionContainer: {
     marginTop: "20px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
   },
 }));
 
@@ -279,16 +272,24 @@ const UserList: React.FC = () => {
 
   return (
     <div>
-      <Typography
+      <Box
         sx={{
-          margin: "10px",
-          fontSize: 30,
+          display: "flex",
+          justifyContent: "space-between",
+          width: "100%",
+          alignItems: "center",
+          marginBottom: "5px",
         }}
       >
-        Users
-      </Typography>
-      <Divider />
-      <div className={classes.actionContainer}>
+        <Typography
+          sx={{
+            margin: "10px",
+            fontSize: 30,
+          }}
+        >
+          Users
+        </Typography>
+
         <TextField
           sx={{ maxWidth: "300px" }}
           value={searchValue}
@@ -298,7 +299,8 @@ const UserList: React.FC = () => {
           label="Search"
           type="search"
         />
-      </div>
+      </Box>
+      <Divider />
       <div className={classes.container}>
         {isLoading ? (
           <LoadingComponent />

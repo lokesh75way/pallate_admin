@@ -9,7 +9,10 @@ export const userSlice = apiSlice.injectEndpoints({
       transformResponse: (response: { data: { users: User[] } }) =>
         response.data.users,
       transformErrorResponse: (response) => response.data,
-      providesTags: ["Users"],
+      providesTags: (result = [], error, args) => [
+        "User",
+        ...result.map(({ _id: id }) => ({ type: "User" as const, id })),
+      ],
     }),
     deleteUsers: builder.mutation({
       query: (credentials) => ({
@@ -19,7 +22,7 @@ export const userSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: (response: { message: string }) => response.message,
       transformErrorResponse: (response) => response.data,
-      invalidatesTags: ["Users", "Ingredients", "Annotators"],
+      invalidatesTags: ["User", "Ingredient", "Annotator"],
     }),
     updateUsers: builder.mutation({
       query: ({ id, ...credentials }) => ({
@@ -30,7 +33,7 @@ export const userSlice = apiSlice.injectEndpoints({
       transformResponse: (response: { data: { users: User[] } }) =>
         response.data.users,
       transformErrorResponse: (response) => response.data,
-      invalidatesTags: ["Users"],
+      invalidatesTags: (result, error, arg) => [{ type: "User", id: arg.id }],
     }),
   }),
   overrideExisting: true,

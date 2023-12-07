@@ -9,7 +9,10 @@ export const ingredientSlice = apiSlice.injectEndpoints({
       transformResponse: (response: { data: { ingredients: Ingredient[] } }) =>
         response.data.ingredients,
       transformErrorResponse: (response) => response.data,
-      providesTags: ["Ingredients"],
+      providesTags: (result = [], error, args) => [
+        "Ingredient",
+        ...result.map(({ _id: id }) => ({ type: "Ingredient" as const, id })),
+      ],
     }),
     getIngredient: builder.query<Ingredient, string>({
       query: (id) => ({
@@ -18,7 +21,7 @@ export const ingredientSlice = apiSlice.injectEndpoints({
       transformResponse: (response: { data: { ingredient: Ingredient } }) =>
         response.data.ingredient,
       transformErrorResponse: (response) => response.data,
-      providesTags: ["Ingredient"],
+      providesTags: (result, error, arg) => [{ type: "Ingredient", id: arg }],
     }),
     deleteIngredients: builder.mutation({
       query: (credentials) => ({
@@ -28,7 +31,7 @@ export const ingredientSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: (response: { message: string }) => response.message,
       transformErrorResponse: (response) => response.data,
-      invalidatesTags: ["Ingredients"],
+      invalidatesTags: ["Ingredient"],
     }),
     createIngredients: builder.mutation({
       query: (credentials) => ({
@@ -39,7 +42,7 @@ export const ingredientSlice = apiSlice.injectEndpoints({
       transformResponse: (response: { data: { ingredients: Ingredient[] } }) =>
         response.data.ingredients,
       transformErrorResponse: (response) => response.data,
-      invalidatesTags: ["Ingredients"],
+      invalidatesTags: ["Ingredient"],
     }),
     updateIngredients: builder.mutation({
       query: ({ id, ...credentials }) => ({
@@ -50,7 +53,9 @@ export const ingredientSlice = apiSlice.injectEndpoints({
       transformResponse: (response: { data: { ingredients: Ingredient[] } }) =>
         response.data.ingredients,
       transformErrorResponse: (response) => response.data,
-      invalidatesTags: ["Ingredients", "Ingredient"],
+      invalidatesTags: (result, error, arg) => [
+        { type: "Ingredient", id: arg.id },
+      ],
     }),
   }),
   overrideExisting: true,

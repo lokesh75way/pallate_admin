@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import { openAlert } from "../../store/slices/alertSlice";
 import LoadingComponent from "../Loading";
 import dayjs from "dayjs";
+import useGenerateRecipe from "../../hooks/useGenerateRecipe";
 
 const EditIngredient: React.FC = () => {
   const { ingredientId } = useParams<{ ingredientId: string }>();
@@ -23,6 +24,7 @@ const EditIngredient: React.FC = () => {
   } = useGetIngredientQuery(ingredientId ?? "");
   const [updateIngredient, { isLoading }] = useUpdateIngredientsMutation();
   const navigate = useNavigate();
+  const { generateRecipes } = useGenerateRecipe();
 
   const submit = async (data: IngredientFormType) => {
     const updatedIngredient = {
@@ -36,6 +38,7 @@ const EditIngredient: React.FC = () => {
       user: data.user.id,
     };
     await updateIngredient(updatedIngredient).unwrap();
+    generateRecipes(data.user.id);
   };
 
   useEffect(() => {
