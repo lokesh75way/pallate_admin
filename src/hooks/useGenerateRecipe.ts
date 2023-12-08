@@ -12,7 +12,11 @@ const useGenerateRecipe = () => {
           return `${data} Recipes generated`;
         },
       },
-      error: "Can't generate recipes",
+      error: {
+        render({ data }) {
+          return (data as any)?.message ?? `Can't generate recipes`;
+        },
+      },
     });
   };
 
