@@ -57,6 +57,25 @@ export const ingredientSlice = apiSlice.injectEndpoints({
         { type: "Ingredient", id: arg.id },
       ],
     }),
+
+    updateCustomLabel: builder.mutation({
+      query: ({
+        id,
+        status,
+      }: {
+        id: string;
+        status: "approve" | "reject";
+      }) => ({
+        url: `/ingredients/${id}/custom/${status}`,
+        method: "PUT",
+      }),
+      transformResponse: (response: { data: { ingredients: Ingredient[] } }) =>
+        response.data.ingredients,
+      transformErrorResponse: (response) => response.data,
+      invalidatesTags: (result, error, arg) => [
+        { type: "Ingredient", id: arg.id },
+      ],
+    }),
   }),
   overrideExisting: true,
 });
@@ -67,4 +86,5 @@ export const {
   useCreateIngredientsMutation,
   useGetIngredientQuery,
   useUpdateIngredientsMutation,
+  useUpdateCustomLabelMutation,
 } = ingredientSlice;

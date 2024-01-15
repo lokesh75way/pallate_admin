@@ -24,6 +24,7 @@ import {
 import {
   useGetIngredientsQuery,
   useDeleteIngredientsMutation,
+  useUpdateCustomLabelMutation,
 } from "../../store/slices/ingredientSlice";
 import { useDispatch } from "react-redux";
 import { openAlert } from "../../store/slices/alertSlice";
@@ -33,6 +34,8 @@ import { makeStyles } from "@mui/styles";
 import ViewIngredient from "./ViewIngredient";
 import { useGetUsersQuery } from "../../store/slices/userSlice";
 import EmptyTable from "../EmptyTable";
+import DoneIcon from "@mui/icons-material/Done";
+import CloseIcon from "@mui/icons-material/Close";
 
 const AddBox = styled(Box)({
   display: "flex",
@@ -62,6 +65,37 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     justifyContent: "flex-end",
   },
+
+  userSuggestion: {
+    display: "flex",
+    alignItems: "center",
+
+    "&:hover": {
+      "& $userSuggContainer": {
+        width: "50%",
+      },
+      "& $userSuggAction": {
+        display: "flex",
+        gap: 2,
+      },
+    },
+  },
+
+  userSuggContainer: {
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+  },
+
+  userSuggAction: {
+    display: "none",
+  },
+  userSuggTyp: {
+    fontSize: 13,
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+  },
 }));
 
 const IngredientsList = () => {
@@ -84,6 +118,8 @@ const IngredientsList = () => {
     useDeleteIngredientsMutation();
   const { data: users } = useGetUsersQuery();
   const [filteredIngredients, setFilteredIngredients] = useState(ingredients);
+  const [approveLabel, { isLoading: isLoadingLabel }] =
+    useUpdateCustomLabelMutation();
 
   const columns: GridColDef[] = [
     {
@@ -100,7 +136,11 @@ const IngredientsList = () => {
           avatar={
             <Avatar alt={params.value.toUpperCase()} src={params.row.image} />
           }
-          title={params.value}
+          title={
+            params.row.customLabels?.["approval_status"] === "APPROVED"
+              ? params.row.customLabels?.["name_by_user"]
+              : params.value
+          }
         />
       ),
     },
@@ -156,6 +196,58 @@ const IngredientsList = () => {
         dayjs(params.value).utc().format("MM-DD-YYYY"),
     },
     {
+      field: "customLabels",
+      headerName: "User suggestion",
+      minWidth: 170,
+      flex: 0.7,
+      renderCell: (params) =>
+        params.value?.["approval_status"] === "PENDING" ? (
+          <Box className={classes.userSuggestion}>
+            <Box className={classes.userSuggContainer}>
+              <Typography className={classes.userSuggTyp}>
+                Name: {params.value?.["name_by_user"]}
+              </Typography>
+              {params.value?.["expiry_by_user"] && (
+                <Typography className={classes.userSuggTyp}>
+                  Expiry:{" "}
+                  {dayjs(params.value?.["expiry_by_user"])
+                    .utc()
+                    .format("MM-DD-YYYY")}
+                </Typography>
+              )}
+            </Box>{" "}
+            {!isLoadingLabel ? (
+              <Box className={classes.userSuggAction}>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    approveLabel({
+                      id: params.id as string,
+                      status: "approve",
+                    }).unwrap()
+                  }
+                >
+                  <DoneIcon color="success" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    approveLabel({
+                      id: params.id as string,
+                      status: "reject",
+                    }).unwrap()
+                  }
+                >
+                  <CloseIcon color="error" />
+                </IconButton>
+              </Box>
+            ) : (
+              <LoadingComponent size={15} />
+            )}
+          </Box>
+        ) : null,
+    },
+    {
       field: "actions",
       headerName: "Actions",
       minWidth: 150,
@@ -181,6 +273,8 @@ const IngredientsList = () => {
       ),
     },
   ];
+
+  // const approveLabel = (status) => {};
 
   const handleCreateClick = () => {
     navigate("/ingredients/create");
