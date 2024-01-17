@@ -167,8 +167,8 @@ const IngredientsList = () => {
     {
       field: "quantity",
       headerName: "Quantity",
-      minWidth: 130,
-      flex: 0.3,
+      minWidth: 110,
+      flex: 0.2,
       sortable: true,
     },
     {
@@ -189,8 +189,8 @@ const IngredientsList = () => {
     {
       field: "expiry",
       headerName: "Expiry",
-      minWidth: 150,
-      flex: 0.5,
+      minWidth: 110,
+      flex: 0.2,
       sortable: true,
       valueFormatter: (params) =>
         dayjs(params.value).utc().format("MM-DD-YYYY"),
@@ -245,13 +245,15 @@ const IngredientsList = () => {
               <LoadingComponent size={15} />
             )}
           </Box>
-        ) : null,
+        ) : (
+          "-"
+        ),
     },
     {
       field: "actions",
       headerName: "Actions",
-      minWidth: 150,
-      flex: 0.5,
+      minWidth: 120,
+      flex: 0.2,
       sortable: false,
       renderCell: (params) => (
         <Box display="flex" alignItems="center" gap={2}>
