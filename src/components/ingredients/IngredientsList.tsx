@@ -20,6 +20,8 @@ import {
   Chip,
   Autocomplete,
   TextField,
+  Tooltip,
+  Badge,
 } from "@mui/material";
 import {
   useGetIngredientsQuery,
@@ -69,6 +71,8 @@ const useStyles = makeStyles((theme) => ({
   userSuggestion: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
 
     "&:hover": {
       "& $userSuggContainer": {
@@ -77,6 +81,9 @@ const useStyles = makeStyles((theme) => ({
       "& $userSuggAction": {
         display: "flex",
         gap: 2,
+      },
+      "& $userSuggCta": {
+        display: "none",
       },
     },
   },
@@ -95,6 +102,35 @@ const useStyles = makeStyles((theme) => ({
     textOverflow: "ellipsis",
     overflow: "hidden",
     whiteSpace: "nowrap",
+  },
+  userSuggCta: {
+    display: "block",
+  },
+
+  userSuggestionApproved: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+
+    "&:hover": {
+      "& $userSuggContainerApproved": {
+        width: "100%",
+      },
+      "& $userSuggActionApproved": {
+        display: "none",
+      },
+    },
+  },
+  userSuggActionApproved: {
+    display: "flex",
+    gap: 2,
+  },
+  userSuggContainerApproved: {
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    width: "70%",
   },
 }));
 
@@ -200,54 +236,91 @@ const IngredientsList = () => {
       headerName: "User suggestion",
       minWidth: 170,
       flex: 0.7,
-      renderCell: (params) =>
-        params.value?.["approval_status"] === "PENDING" ? (
-          <Box className={classes.userSuggestion}>
-            <Box className={classes.userSuggContainer}>
-              <Typography className={classes.userSuggTyp}>
-                Name: {params.value?.["name_by_user"]}
-              </Typography>
-              {params.value?.["expiry_by_user"] && (
-                <Typography className={classes.userSuggTyp}>
-                  Expiry:{" "}
-                  {dayjs(params.value?.["expiry_by_user"])
-                    .utc()
-                    .format("MM-DD-YYYY")}
-                </Typography>
-              )}
-            </Box>{" "}
-            {!isLoadingLabel ? (
-              <Box className={classes.userSuggAction}>
-                <IconButton
-                  size="small"
-                  onClick={() =>
-                    approveLabel({
-                      id: params.id as string,
-                      status: "approve",
-                    }).unwrap()
-                  }
-                >
-                  <DoneIcon color="success" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() =>
-                    approveLabel({
-                      id: params.id as string,
-                      status: "reject",
-                    }).unwrap()
-                  }
-                >
-                  <CloseIcon color="error" />
-                </IconButton>
+      renderCell: (params) => {
+        if (params.value?.["approval_status"] === "PENDING") {
+          return (
+            <Tooltip arrow title="PENDING APPROVAL">
+              <Box className={classes.userSuggestion}>
+                <Box className={classes.userSuggContainer}>
+                  <Typography className={classes.userSuggTyp}>
+                    Name: {params.value?.["name_by_user"]}
+                  </Typography>
+                  {params.value?.["expiry_by_user"] && (
+                    <Typography className={classes.userSuggTyp}>
+                      Expiry:{" "}
+                      {dayjs(params.value?.["expiry_by_user"])
+                        .utc()
+                        .format("MM-DD-YYYY")}
+                    </Typography>
+                  )}
+                </Box>{" "}
+                <Box className={classes.userSuggAction}>
+                  <IconButton
+                    size="small"
+                    disabled={isLoadingLabel}
+                    onClick={() =>
+                      approveLabel({
+                        id: params.id as string,
+                        status: "approve",
+                      }).unwrap()
+                    }
+                  >
+                    <DoneIcon color="success" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    disabled={isLoadingLabel}
+                    onClick={() =>
+                      approveLabel({
+                        id: params.id as string,
+                        status: "reject",
+                      }).unwrap()
+                    }
+                  >
+                    <CloseIcon color="error" />
+                  </IconButton>
+                </Box>
+                <Box className={classes.userSuggCta}>
+                  <Badge color="warning" variant="dot"></Badge>
+                </Box>
               </Box>
-            ) : (
-              <LoadingComponent size={15} />
-            )}
-          </Box>
-        ) : (
-          "-"
-        ),
+            </Tooltip>
+          );
+        } else if (
+          ["APPROVED", "REJECTED"].includes(params.value?.["approval_status"])
+        ) {
+          return (
+            <Tooltip arrow title={params.value?.["approval_status"]}>
+              <Box className={classes.userSuggestionApproved}>
+                <Box className={classes.userSuggContainerApproved}>
+                  <Typography className={classes.userSuggTyp}>
+                    Name: {params.value?.["name_by_user"]}
+                  </Typography>
+                  {params.value?.["expiry_by_user"] && (
+                    <Typography className={classes.userSuggTyp}>
+                      Expiry:{" "}
+                      {dayjs(params.value?.["expiry_by_user"])
+                        .utc()
+                        .format("MM-DD-YYYY")}
+                    </Typography>
+                  )}
+                </Box>{" "}
+                <Box className={classes.userSuggActionApproved}>
+                  {params.value?.["approval_status"] === "REJECTED" ? (
+                    <IconButton size="small" disabled>
+                      <CloseIcon color="error" />
+                    </IconButton>
+                  ) : (
+                    <IconButton size="small" disabled>
+                      <DoneIcon color="success" />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+            </Tooltip>
+          );
+        } else return "-";
+      },
     },
     {
       field: "actions",
