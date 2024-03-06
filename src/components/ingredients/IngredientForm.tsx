@@ -116,7 +116,6 @@ const IngredientForm = ({
   const ref = useRef<any>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const {
     handleSubmit,
     control,
@@ -333,7 +332,7 @@ const IngredientForm = ({
             <Controller
               name="expiry"
               control={control}
-              defaultValue={new Date().toISOString().slice(0, 10)}
+              defaultValue={new Date(new Date().setDate(new Date().getDate() + 5)).toISOString().slice(0, 10)}
               rules={{ required: "Date is required" }}
               render={({ field }) => (
                 <TextField

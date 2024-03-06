@@ -38,7 +38,7 @@ const CreateIngredient: React.FC = () => {
         initialValues={{
           name: "",
           quantity: 0,
-          expiry: new Date().toISOString().slice(0, 10),
+          expiry: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString().slice(0, 10),
           type: "KG",
           price: 0,
           image: "",
