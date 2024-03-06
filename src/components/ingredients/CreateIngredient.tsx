@@ -37,9 +37,11 @@ const CreateIngredient: React.FC = () => {
         saveIngredient={submit}
         initialValues={{
           name: "",
-          quantity: 0,
-          expiry: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString().slice(0, 10),
-          type: "KG",
+          // quantity: 0,
+          expiry: new Date(new Date().setDate(new Date().getDate() + 5))
+            .toISOString()
+            .slice(0, 10),
+          // type: "KG",
           price: 0,
           image: "",
           user: { id: "", label: "" },

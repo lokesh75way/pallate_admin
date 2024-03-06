@@ -91,8 +91,8 @@ export interface IngredientFormType {
     label: string;
   };
   name: string;
-  quantity: number;
-  type: Quantity_Type;
+  // quantity: number;
+  // type: Quantity_Type;
   expiry: string;
   image: string;
   price: number;
@@ -243,7 +243,7 @@ const IngredientForm = ({
               )}
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <Controller
               name="quantity"
               control={control}
@@ -304,7 +304,7 @@ const IngredientForm = ({
                 </FormControl>
               )}
             />
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} sm={6}>
             <Controller
               name="price"
@@ -332,7 +332,11 @@ const IngredientForm = ({
             <Controller
               name="expiry"
               control={control}
-              defaultValue={new Date(new Date().setDate(new Date().getDate() + 5)).toISOString().slice(0, 10)}
+              defaultValue={new Date(
+                new Date().setDate(new Date().getDate() + 5)
+              )
+                .toISOString()
+                .slice(0, 10)}
               rules={{ required: "Date is required" }}
               render={({ field }) => (
                 <TextField

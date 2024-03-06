@@ -30,9 +30,9 @@ const EditIngredient: React.FC = () => {
     const updatedIngredient = {
       id: ingredientId,
       name: data.name,
-      quantity: data.quantity,
+      // quantity: data.quantity,
       expiry: data.expiry,
-      type: data.type,
+      // type: data.type,
       price: data.price,
       image: data.image,
       user: data.user.id,
