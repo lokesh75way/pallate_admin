@@ -184,7 +184,7 @@ const IngredientsList = () => {
       field: "user",
       headerName: "User Assigned",
       minWidth: 170,
-      flex: 0.6,
+      flex: 0.7,
       sortable: true,
       renderCell: (params) => (
         <>
@@ -200,20 +200,20 @@ const IngredientsList = () => {
         </>
       ),
     },
-    {
-      field: "quantity",
-      headerName: "Quantity",
-      minWidth: 110,
-      flex: 0.2,
-      sortable: true,
-    },
-    {
-      field: "type",
-      headerName: "Unit",
-      minWidth: 110,
-      flex: 0.2,
-      sortable: true,
-    },
+    // {
+    //   field: "quantity",
+    //   headerName: "Quantity",
+    //   minWidth: 110,
+    //   flex: 0.2,
+    //   sortable: true,
+    // },
+    // {
+    //   field: "type",
+    //   headerName: "Unit",
+    //   minWidth: 110,
+    //   flex: 0.2,
+    //   sortable: true,
+    // },
     {
       field: "price",
       headerName: "Price",
@@ -223,9 +223,18 @@ const IngredientsList = () => {
       renderCell: (params) => `$${params.value}`,
     },
     {
+      field: "createdAt",
+      headerName: "Created At",
+      minWidth: 150,
+      flex: 0.2,
+      sortable: true,
+      valueFormatter: (params) =>
+        dayjs(params.value).utc().format("MM-DD-YYYY"),
+    },
+    {
       field: "expiry",
       headerName: "Expiry",
-      minWidth: 110,
+      minWidth: 150,
       flex: 0.2,
       sortable: true,
       valueFormatter: (params) =>
